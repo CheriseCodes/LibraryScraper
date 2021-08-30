@@ -1,6 +1,6 @@
 from selenium.webdriver.support.expected_conditions import element_selection_state_to_be
 import sys
-from scrape import *
+from library import *
 import subprocess
 import os
 
@@ -8,7 +8,18 @@ import os
 
 try:
     #print(sys.argv[1])
-    scrape_holds(sys.argv[1])
+    driver = webdriver.Chrome("chromedriver")
+    ppl = PPL(driver)
+    on_hold = ppl.get_items_on_hold()
+    if on_hold:
+        for item in on_hold:
+            print(item)
+
+    driver.close()
+    if os.name == 'nt':
+        subprocess.run(["powershell","-Command","Stop-Process -name chromedriver"])
+    else:
+        print("This is not a Windows system")
 except KeyboardInterrupt:
     # TODO: currently does not kill the process
     if os.name == 'nt':
