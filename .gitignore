@@ -1,3 +1,7 @@
 __pycache__
+__init__.py
 env
 scrape_copy.py
+robots/
+*~
+sample_holds.md

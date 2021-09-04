@@ -9,8 +9,8 @@ import os
 try:
     #print(sys.argv[1])
     driver = webdriver.Chrome("chromedriver")
-    ppl = PPL(driver)
-    on_hold = ppl.get_items_on_hold()
+    library_obj = TPL(driver)
+    on_hold = library_obj.get_items_on_hold()
     if on_hold:
         for item in on_hold:
             print(item)
