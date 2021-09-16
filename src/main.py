@@ -21,7 +21,6 @@ try:
     else:
         print("This is not a Windows system")
 except KeyboardInterrupt:
-    # TODO: currently does not kill the process
     if os.name == 'nt':
         subprocess.run(["powershell","-Command","Stop-Process -name chromedriver"])
     else:
