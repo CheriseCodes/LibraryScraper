@@ -43,7 +43,7 @@ class Item:
             self.contributors = ''
 
     def __str__(self):
-        return "date_retrieved={},title={},contributors={},format={},is_hold={},status={},item_date={},branch={}".format(self.date_retrieved,self.title,self.contributors,self.format,self.is_hold,self.status,self.item_date,self.branch)
+        return f"date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors},format={self.format},is_hold={self.is_hold},status={self.status},item_date={self.item_date},branch={self.branch}"
         
     def text_string(self):
         if self.title == '':
@@ -286,7 +286,7 @@ class DurhamLibrary:
             return self.create_item_object_checked_out(date, data)
 
     def formulate_checkouts_text(self, checkouts):
-        res = '\n'+self.region +' CHECKOUTS ({}):\n'.format(date.today())
+        res = '\n'+self.region + f" CHECKOUTS ({date.today()}):\n"
         i = 1
         for item in checkouts:
             res += str(i) + '. ' + item.text_string() + '\n'
@@ -294,7 +294,7 @@ class DurhamLibrary:
         return res
         
     def formulate_holds_text(self, checkouts):
-        res = '\n'+self.region +' HOLDS ({}):\n'.format(date.today())
+        res = '\n'+self.region + f" HOLDS ({date.today()}):\n"
         i = 1
         for item in checkouts:
             res += str(i) + '. ' + item.text_string() + '\n'
@@ -408,7 +408,7 @@ class PPL(DurhamLibrary):
             lines = container.text.split('\n')
             return 'Claremont Library Hours\n'+'\n'.join(lines[1:])
         else:
-            raise NoSuchElementException("Hours for {} cannot be found because the branch does not exist".format(branch))
+            raise NoSuchElementException(f"Hours for {branch} cannot be found because the branch does not exist")
 
 
         return ""
@@ -620,7 +620,7 @@ class TPL:
                 end_of_branches = True
 
         if end_of_branches:
-            raise NoSuchElementException("Hours for {} cannot be found because the branch does not exist".format(branch))
+            raise NoSuchElementException(f"Hours for {branch} cannot be found because the branch does not exist")
         return ""
 
     def login(self,username,password,url='https://account.torontopubliclibrary.ca/login'):

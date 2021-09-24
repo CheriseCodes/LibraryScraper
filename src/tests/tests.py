@@ -72,7 +72,7 @@ class Library(unittest.TestCase):
         driver.close()
         #print(holds)
         for item in holds:
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
 
 
     def test_wpl_scrapes_items_on_hold(self):
@@ -92,7 +92,7 @@ class Library(unittest.TestCase):
         driver.close()
         for item in check_outs:
             print(item.text_string())
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
 
     def test_wpl_scrapes_hours_given_branch(self):
         
@@ -112,7 +112,7 @@ class Library(unittest.TestCase):
         on_hold = ppl.items_on_hold(self.login_info['p'][0],self.login_info['p'][1])
         for item in on_hold:
             print(item.text_string())
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
         driver.close()
 
     def test_ppl_scrapes_items_checked_out(self):
@@ -123,7 +123,7 @@ class Library(unittest.TestCase):
         driver.close()
         for item in check_outs:
             print(item.text_string())
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
 
     def test_ppl_scrapes_hours_given_branch(self):
         driver = self.create_webdriver()
@@ -141,7 +141,7 @@ class Library(unittest.TestCase):
         driver.close()
         for item in holds:
             print(item.text_string())
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
         
     
     def test_tpl_scrapes_items_checked_out(self):
@@ -151,7 +151,7 @@ class Library(unittest.TestCase):
         driver.close()
         for item in checkouts:
             print(item.text_string())
-            self.assertTrue(type(item) == Item, "type(item) is {}".format(type(item)))
+            self.assertTrue(type(item) == Item, f"type(item) is {type(item)}")
         
 
     def test_tpl_scrapes_hours_given_branch(self):
