@@ -1,11 +1,8 @@
 from selenium import webdriver
 from libscrape.library import *
-import subprocess
 import os
 
-# Based on: https://stackoverflow.com/questions/1112343/how-do-i-capture-sigint-in-python
-
-try:
+if __name__=="__main__":
     #print(sys.argv[1])
     login_info = {"p":(os.environ['PPL_USER'], os.environ['PPL_PASS']), "w":(os.environ['WPL_USER'], os.environ['WPL_PASS']), "t":(os.environ['TPL_USER'],os.environ['TPL_PASS'])}
     driver = webdriver.Chrome("chromedriver")
@@ -16,13 +13,4 @@ try:
             print(item)
 
     driver.close()
-    if os.name == 'nt':
-        subprocess.run(["powershell","-Command","Stop-Process -name chromedriver"])
-    else:
-        print("This is not a Windows system")
-except KeyboardInterrupt:
-    if os.name == 'nt':
-        subprocess.run(["powershell","-Command","Stop-Process -name chromedriver"])
-    else:
-        print("This is not a Windows system")
 
