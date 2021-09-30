@@ -2,11 +2,5 @@ __pycache__
 __init__.py
 *.pyc
 env
-scrape_copy.py
-robots/
 *~
-sample_holds.md
-sample_checkouts.md
-sample.html
-ghostdriver.log
-old-requirements.txt
+personal_notes/

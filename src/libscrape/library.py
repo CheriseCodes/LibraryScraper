@@ -5,7 +5,7 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 import re
 import os
 from twilio.rest import Client
-
+from libscrape.libparser import DurhamHoldParser
 from datetime import date
 
 # TODO: move to its own file
@@ -15,6 +15,7 @@ def save_output_as_html(text):
     f.close()
 
 class Item:
+    ''''[data_recieved, title, contributors,format,is_hold,item_date,status,branch,system]'''
     def __init__(self, *args):
         if len(args) == 9:
             self.date_retrieved = args[0] # the date the data was retrieved from the website
@@ -44,7 +45,7 @@ class Item:
 
     def __str__(self):
         return f"date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors},format={self.format},is_hold={self.is_hold},status={self.status},item_date={self.item_date},branch={self.branch}"
-        
+
     def text_string(self):
         if self.title == '':
             return ''
@@ -292,7 +293,7 @@ class DurhamLibrary:
             res += str(i) + '. ' + item.text_string() + '\n'
             i+=1
         return res
-        
+
     def formulate_holds_text(self, checkouts):
         res = '\n'+self.region + f" HOLDS ({date.today()}):\n"
         i = 1
@@ -315,7 +316,6 @@ class DurhamLibrary:
                 )
         return message
 
-
     def send_holds_text(self, data):
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
@@ -328,6 +328,7 @@ class DurhamLibrary:
                             to=os.environ['TWILIO_TO']
                 )
         return message
+
 class PPL(DurhamLibrary):
     '''Class for Pickering Public Library'''
     def __init__(self,driver):
@@ -372,10 +373,57 @@ class PPL(DurhamLibrary):
         # scrape for items on hold only
         res =[]
         hold_data = self.hold_data(username,password)
-        for lines in hold_data:
-            hold_item = self.create_item_object(date.today(), True,lines)
-            if hold_item.title:
-                res.append(hold_item)
+        parser = None
+
+        if hold_data:
+            parsers = {"DVD": DurhamHoldParser({"title":2,
+                                        "format":2,
+                                        "contributors_with_subtitle": None,
+                                        "contributors_without_subtitle": None,
+                                        "status_with_subtitle":8,
+                                        "status_without_subtitle":7,
+                                        "item_date_with_subtitle": 10,
+                                        "item_date_without_subtitle": 9,
+                                        "branch_with_subtitle":9,
+                                        "branch_without_subtitle": 8}),
+                    "CD_and_Book": DurhamHoldParser({"title":2,
+                                        "format":2,
+                                        "contributors_with_subtitle": 4,
+                                        "contributors_without_subtitle": 3,
+                                        "status_with_subtitle":9,
+                                        "status_without_subtitle":8,
+                                        "item_date_with_subtitle": 11,
+                                        "item_date_without_subtitle": 10,
+                                        "branch_with_subtitle": 10,
+                                        "branch_without_subtitle":9})}
+            for lines in hold_data:
+                format = DurhamHoldParser.format(lines)
+                parser = None
+                if "DVD" in format:
+                    generic_format = "DVD"
+                    parser = parsers["DVD"]
+                elif "CD" in format:
+                    generic_format = "CD"
+                    parser = parsers["CD_and_Book"]
+                elif "Book" in format:
+                    generic_format = "Book"
+                    parser = parsers["CD_and_Book"]
+
+                if parser:
+                    has_subtitle = DurhamHoldParser.has_subtitle(lines,generic_format)
+                    title = parser.title(lines)
+                    format = parser.format(lines)
+                    if generic_format != "DVD":
+                        contributors = parser.contributors(lines,has_subtitle)
+                    else:
+                        contributors = ''
+                    status = parser.status(lines,has_subtitle)
+                    item_date = parser.item_date(lines,has_subtitle)
+                    branch = parser.branch(lines,has_subtitle)
+                
+                hold_item = Item(date.today(),title,contributors,format,True,item_date,status,branch,'durham')
+                if hold_item.title:
+                    res.append(hold_item)
         return res
 
     def items_checked_out(self,username,password):
