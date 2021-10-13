@@ -83,6 +83,7 @@ class Library(unittest.TestCase):
         driver.close()
         #print(holds)
         for item in holds:
+            print(item.text_string())
             self.assertTrue(item.is_hold, "Item is not on hold")
     
     def test_wpl_scrapes_items_checked_out(self):
