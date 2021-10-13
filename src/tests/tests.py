@@ -119,7 +119,7 @@ class Library(unittest.TestCase):
         driver = self.create_webdriver()
         ppl = PPL(driver)
         check_outs = ppl.items_checked_out(self.login_info['p'][0],self.login_info['p'][1])
-        print(check_outs)
+        #print(check_outs)
         driver.close()
         for item in check_outs:
             print(item.text_string())
