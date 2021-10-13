@@ -112,8 +112,18 @@ class DurhamHoldParser(LibraryParser):
         
         return branch.replace("Pick up by ", "")
 
-    def all(self, data_to_parse):
-        return [self.title(data_to_parse), self.format(data_to_parse), self.contributors(data_to_parse), self.status(data_to_parse)]
+    def all(self, data_to_parse, generic_format, has_subtitle=None):
+        if not(has_subtitle):
+            has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse,generic_format)
+
+        return [
+            self.title(data_to_parse), 
+            self.format(data_to_parse), 
+            self.contributors(data_to_parse,generic_format,has_subtitle), 
+            self.status(data_to_parse,has_subtitle),
+            self.item_date(data_to_parse,has_subtitle),
+            self.branch(data_to_parse, has_subtitle)
+            ]
 
 class DurhamCheckoutParser(LibraryParser):
     def __init__(self, parse_rule):

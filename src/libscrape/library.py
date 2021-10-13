@@ -103,13 +103,10 @@ class DurhamLibrary:
             format = DurhamHoldParser.format(lines)
             parser, generic_format = self.select_parser(format,parsers)
             if parser:
+
                 has_subtitle = DurhamHoldParser.has_subtitle(lines,generic_format)
-                title = parser.title(lines)
-                format = parser.format(lines)
-                contributors = parser.contributors(lines,generic_format,has_subtitle)
-                status = parser.status(lines,has_subtitle)
-                item_date = parser.item_date(lines,has_subtitle)
-                branch = parser.branch(lines,has_subtitle)
+                title, format, contributors, status, item_date, branch = parser.all(lines, generic_format, has_subtitle)
+
                 hold_item = Item(date.today(),title,contributors,format,True,item_date,status,branch,'durham')
                 if hold_item.title:
                     res.append(hold_item)
@@ -141,11 +138,7 @@ class DurhamLibrary:
             parser, generic_format = self.select_parser(format,parsers)
             if parser:
                 has_subtitle = DurhamCheckoutParser.has_subtitle(lines,generic_format)
-                title = parser.title(lines)
-                format = parser.format(lines)
-                contributors = parser.contributors(lines,generic_format,has_subtitle)
-                status = parser.status(lines,has_subtitle)
-                item_date = parser.item_date(lines,has_subtitle)
+                title, format, contributors, status, item_date = parser.all(lines, generic_format, has_subtitle)
                 hold_item = Item(date.today(),title,contributors,format,False,item_date,status,'','durham')
                 if hold_item.title:
                     res.append(hold_item)
