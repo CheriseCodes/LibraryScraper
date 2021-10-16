@@ -8,7 +8,29 @@ import os
 class Library(unittest.TestCase):
     def setUp(self):
         self.login_info = {"p":(os.environ['PPL_USER'], os.environ['PPL_PASS']), "w":(os.environ['WPL_USER'], os.environ['WPL_PASS']), "t":(os.environ['TPL_USER'],os.environ['TPL_PASS'])}
+
         self.test_with_ui = False
+
+        self.mock_durham_checkouts = [Item(date.today(),'Bach','by Grimaud, Hélène','Music CD',False,'Oct. 20, 2021','Due Later','','durham'),\
+            Item(date.today(),'Nature','','DVD',False,'Oct. 20, 2021','Due Later','','durham'), \
+            Item(date.today(),'The Defining Decade','by Jay, Meg','Book',False,'Nov. 03, 2021','Due Later','','durham'), \
+            Item(date.today(),'Studying Soil','Book - 2013','Book',False,'Renewed 1 time','Overdue','','durham'), \
+            Item(date.today(),'What I Talk About When I Talk About Running','by Murakami, Haruki','Book',False,'Nov. 03, 2021','Due Later','','durham')]
+
+        self.mock_durham_holds = [Item(date.today(),'Lynyrd Skynyrd: Gold','by Lynyrd Skynyrd','Music CD',True,' Oct. 15, 2021','Ready','Pick up at Central Library','durham'), \
+            Item(date.today(),"6 Traits of the World's Most Productive Companies",'','DVD',True,'May 19, 2022','Not Ready','Pick up at Central Library','durham')]
+        
+        self.mock_toronto_checkouts = [Item(date.today(),'Test-driven development with React : apply test-driven development in your applications','by Qiu, Juntao','Book',False,'Yesterday','Overdue','','toronto'), \
+            Item(date.today(),'Learning React : modern patterns for developing React apps','by Banks, Alex (Software engineer)','Book',False,'Sat 16 Oct','Due Tomorrow','','toronto'), \
+            Item(date.today(),'The rope','by Barr','Compact Disc Set',False,'Sat 16 Oct','Due Tomorrow','','toronto'), \
+            Item(date.today(),'The object-oriented thought process','by Weisfeld, Matt A.','Book',False,'Wed 20 Oct','Due Later','','toronto'), \
+            Item(date.today(),'Test-driven development with Python : obey the testing goat: using Django, Selenium, and JavaScript','by Percival, Harry','Book',False,'Tue 2 Nov','Due Later','','toronto'), \
+            Item(date.today(),'Merge ; Disciple : [two short novels from crosstown to oblivion]','by Mosley','Compact Disc Set',False,'Tue 2 Nov','Due Later','','toronto')]
+        
+        self.mock_toronto_holds = []
+
+        # TODO: Create mock checkout and hold page for each branch
+
 
     def create_webdriver(self):
         if self.test_with_ui:
@@ -183,3 +205,20 @@ class Library(unittest.TestCase):
         print(res)
         self.assertIsNotNone(res) # TODO: Assert with regex
         driver.close()
+
+    def test_durham_update_doc(self):
+        driver = self.create_webdriver()
+        ppl = WPL(driver)
+        checkouts = ppl.items_checked_out(self.login_info['w'][0],self.login_info['w'][1])
+        driver.close()
+        dl = DurhamLibrary()
+        dl.overwrite_doc(checkouts)
+
+    def test_generate_mock(self):
+        driver = self.create_webdriver()
+        wpl = TPL(driver)
+        checkouts = wpl.items_checked_out(self.login_info['t'][0],self.login_info['t'][1])
+        for item in checkouts:
+            item.generate_mock()
+        driver.close()
+

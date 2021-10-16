@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from tests.tests import Library
+
 # NOTE: ParserRule is just a dictionary that maps each expected piece of data
 # to an index
 
@@ -31,6 +33,8 @@ class LibraryParser(ABC):
     @abstractmethod
     def item_date(self, data_to_parse, status=None):
         pass
+
+# class DurhamParser(LibraryParser)
 
 class DurhamHoldParser(LibraryParser):
     def __init__(self, parse_rule):

@@ -1,9 +1,19 @@
+from __future__ import print_function
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+
+
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+
 import re
-import os
+import requests
+import os # import os.path
 from twilio.rest import Client
 from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser
 from datetime import date
@@ -54,6 +64,13 @@ class Item:
             return self.title +  " ("+ self.format + ") | " + (self.status!='')*(self.status + " | ") + self.item_date + self.is_hold*(' | ' + self.branch)
         else:
             return self.title +  " ("+ self.format + ") " + self.contributors + ' | ' +  (self.status!='')*(self.status + " | ") + self.item_date + self.is_hold*(' | ' + self.branch)
+    def generate_mock(self):
+        f = open("mock.txt", "a")
+        new_mock = "Item(date.today(),'" + self.title + "','" + self.contributors + \
+            "','" + self.format + "'," + str(self.is_hold) + ",'" + self.item_date + "','" + \
+                self.status + "','" + self.branch + "','" + self.system + "')\n"
+        f.write(new_mock)
+        f.close()
 
 class DurhamLibrary:
     def __init__(self, region=''):
@@ -159,7 +176,74 @@ class DurhamLibrary:
             res += str(i) + '. ' + item.text_string() + '\n'
             i+=1
         return res
+
+    def overwrite_doc(self, items):
+        ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+        SCOPES = ['https://www.googleapis.com/auth/documents']
+        DOCUMENT_ID = os.environ['LIB_SCRAPER_DOC_ID']
+        #creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        creds = None
+        # The file token.json stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        if os.path.exists('token.json'):
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    os.path.join(ROOT_DIR, 'credentials.json'), SCOPES)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
         
+        service = build('docs', 'v1', credentials=creds)
+
+        # Figure out what start and end indexes are
+        #doc_data = requests.get("https://docs.googleapis.com/v1/documents/" + os.environ['LIB_SCRAPER_DOC_ID'] + "=body.content(startIndex%2CendIndex)",headers={'Authorization': os.environ['LIB_SCRAPER_DOC_AUTH'], "refresh_token": os.environ['LIB_SCRAPER_DOC_TOKEN'],'Accept':'application/json'}).json()
+        #print(doc_data)
+        #start_idx = doc_data['body']['content'][1]['startIndex']
+        #end_idx = doc_data['body']['content'][1]['endIndex']
+
+        # formulate new content
+        new_text = ''
+        for item in items:
+            new_text += item.text_string() + '\n'
+        start_idx = 1
+        end_idx = 2
+        req1 = [
+        {
+            'deleteContentRange': {
+                'range': {
+                    'startIndex': start_idx,
+                    'endIndex': end_idx-1
+                }
+
+            }
+        }]
+
+        req2 = [{
+            'insertText': {
+                'location': {
+                    'index': 1,
+                },
+                'text': new_text
+            }
+        },
+        ]
+        # Retrieve the documents contents from the Docs service.
+        document = service.documents().get(documentId=DOCUMENT_ID).execute()
+
+        print('The title of the document is: {}'.format(document.get('title')))
+
+        if end_idx > 2:
+            service.documents().batchUpdate(
+            documentId=DOCUMENT_ID, body={'requests': req1}).execute()
+        service.documents().batchUpdate(
+        documentId=DOCUMENT_ID, body={'requests': req2}).execute()
 
     def send_checkouts_text(self, data):
         account_sid = os.environ['TWILIO_ACCOUNT_SID']

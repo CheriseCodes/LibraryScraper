@@ -4,3 +4,5 @@ __init__.py
 env
 *~
 personal_notes/
+credentials.json
+token.json
