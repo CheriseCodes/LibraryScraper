@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from tests.tests import Library
-
 # NOTE: ParserRule is just a dictionary that maps each expected piece of data
 # to an index
 
@@ -34,20 +32,9 @@ class LibraryParser(ABC):
     def item_date(self, data_to_parse, status=None):
         pass
 
-# class DurhamParser(LibraryParser)
-
-class DurhamHoldParser(LibraryParser):
+class DurhamParser(LibraryParser):
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
-
-    @staticmethod
-    def has_subtitle(data_to_parse, format=None):
-        if not(format):
-            format = DurhamHoldParser.format(data_to_parse)
-        if format == "DVD":
-            return not(data_to_parse[3][:2] == 'by') and not(data_to_parse[3][:6] == 'DVD - ')
-        elif format == "CD" or format == "Book":
-            return not(data_to_parse[3][:2] == 'by')
 
     def title(self, data_to_parse):
         return data_to_parse[self.parse_rule["title"]].rsplit(", ",1)[0]
@@ -74,6 +61,20 @@ class DurhamHoldParser(LibraryParser):
             return data_to_parse[self.parse_rule["contributors_with_subtitle"]]
         else:
             return data_to_parse[self.parse_rule["contributors_without_subtitle"]]
+    
+
+class DurhamHoldParser(DurhamParser):
+    def __init__(self, parse_rule):
+        super().__init__(parse_rule)
+
+    @staticmethod
+    def has_subtitle(data_to_parse, format=None):
+        if not(format):
+            format = DurhamHoldParser.format(data_to_parse)
+        if format == "DVD":
+            return not(data_to_parse[3][:2] == 'by') and not(data_to_parse[3][:6] == 'DVD - ')
+        elif format == "CD" or format == "Book":
+            return not(data_to_parse[3][:2] == 'by')
 
     def status(self, data_to_parse, has_subtitle=None):
         if has_subtitle == None:
@@ -129,7 +130,7 @@ class DurhamHoldParser(LibraryParser):
             self.branch(data_to_parse, has_subtitle)
             ]
 
-class DurhamCheckoutParser(LibraryParser):
+class DurhamCheckoutParser(DurhamParser):
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -150,33 +151,6 @@ class DurhamCheckoutParser(LibraryParser):
             return len(data_to_parse) > 14
         else:
             return False
-        
-
-    def title(self, data_to_parse):
-        return data_to_parse[self.parse_rule["title"]].rsplit(", ",1)[0]
-
-    def format(self, data_to_parse):
-        return data_to_parse[self.parse_rule["format"]].rsplit(", ",1)[1]
-
-    @staticmethod
-    def format(data_to_parse):
-        return data_to_parse[2].rsplit(", ",1)[1]
-
-    @staticmethod
-    def title(data_to_parse):
-        return data_to_parse[2].rsplit(", ",1)[0]
-
-    def contributors(self, data_to_parse, generic_format, has_subtitle=None):
-        if generic_format == "DVD":
-            return ''
-
-        if has_subtitle == None:
-            has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
-       
-        if has_subtitle:
-            return data_to_parse[self.parse_rule["contributors_with_subtitle"]]
-        else:
-            return data_to_parse[self.parse_rule["contributors_without_subtitle"]]
 
     def status(self, data_to_parse, has_subtitle=None):
         if has_subtitle == None:

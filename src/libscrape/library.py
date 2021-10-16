@@ -276,7 +276,6 @@ class PPL(DurhamLibrary):
     def __init__(self,driver):
         super().__init__("Pickering Public Library")
         self.driver = driver
-        self._name = "Pickering Public Library"
 
     def hold_data(self,username,password):
         res = []
@@ -370,7 +369,6 @@ class WPL(DurhamLibrary):
     def __init__(self,driver):
         super().__init__("Whitby Public Library")
         self.driver = driver
-        self._name = "Whitby Public Library"
 
     def checkout_data(self,username,password):
         res = []
