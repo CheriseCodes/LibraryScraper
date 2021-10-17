@@ -1,4 +1,5 @@
 from __future__ import print_function
+from hashlib import new
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -16,16 +17,31 @@ import requests
 import os # import os.path
 from twilio.rest import Client
 from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser
+from libscrape.utils import save_output_as_html
 from datetime import date
 
-# TODO: move to its own file
-def save_output_as_html(text):
-    f = open('sample.html','w',encoding='utf-8')
-    f.write(text)
-    f.close()
-
 class Item:
-    ''''[data_recieved, title, contributors,format,is_hold,item_date,status,branch,system]'''
+    '''
+    A library item
+    ...
+    Attributes
+    ----------
+    data_recieved: datetime.date
+        The date the data for this library item was retreived from the website
+    title: str
+    contributors: str
+    format: str
+    is_hold: bool
+    item_date: str
+    status: str
+    branch: str
+    system: str
+    
+    Methods
+    -------
+    text_to_string()
+        Formates the string version of the item that is suitable for presenting directly to the client
+    '''
     def __init__(self, *args):
         if len(args) == 9:
             self.date_retrieved = args[0] # the date the data was retrieved from the website
@@ -73,7 +89,7 @@ class Item:
         f.close()
 
 class DurhamLibrary:
-    def __init__(self, region=''):
+    def __init__(self, region):
         super().__init__()
         self.checkouts = []
         self.holds = []
@@ -160,24 +176,34 @@ class DurhamLibrary:
                 if hold_item.title:
                     res.append(hold_item)
         return res
+    
+    def formulate_text(self, checkouts, type):
+        res = ''
+        # case 1: plain text
+        if type == 1:
+            i = 1
+            for item in checkouts:
+                res += str(i) + '. ' + item.text_string() + '\n'
+                i+=1
+        # case 2: Google doc link
+        elif type == 2:
+            res += 'Click here to view your updated report: https://docs.google.com/document/d/' + \
+                os.environ['LIB_SCRAPER_DOC_ID']
 
-    def formulate_checkouts_text(self, checkouts):
+        return res
+
+    def formulate_checkouts_text(self, checkouts, type):
+        print(self.region)
         res = '\n'+self.region + f" CHECKOUTS ({date.today()}):\n"
-        i = 1
-        for item in checkouts:
-            res += str(i) + '. ' + item.text_string() + '\n'
-            i+=1
+        res += self.formulate_text(checkouts, type)
         return res
 
-    def formulate_holds_text(self, checkouts):
+    def formulate_holds_text(self, checkouts, type):
         res = '\n'+self.region + f" HOLDS ({date.today()}):\n"
-        i = 1
-        for item in checkouts:
-            res += str(i) + '. ' + item.text_string() + '\n'
-            i+=1
+        res += self.formulate_text(checkouts, type)
         return res
 
-    def overwrite_doc(self, items):
+    def append_doc(self, items, is_hold):
         ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
         SCOPES = ['https://www.googleapis.com/auth/documents']
         DOCUMENT_ID = os.environ['LIB_SCRAPER_DOC_ID']
@@ -202,30 +228,16 @@ class DurhamLibrary:
         
         service = build('docs', 'v1', credentials=creds)
 
-        # Figure out what start and end indexes are
-        #doc_data = requests.get("https://docs.googleapis.com/v1/documents/" + os.environ['LIB_SCRAPER_DOC_ID'] + "=body.content(startIndex%2CendIndex)",headers={'Authorization': os.environ['LIB_SCRAPER_DOC_AUTH'], "refresh_token": os.environ['LIB_SCRAPER_DOC_TOKEN'],'Accept':'application/json'}).json()
-        #print(doc_data)
-        #start_idx = doc_data['body']['content'][1]['startIndex']
-        #end_idx = doc_data['body']['content'][1]['endIndex']
-
         # formulate new content
-        new_text = ''
-        for item in items:
-            new_text += item.text_string() + '\n'
-        start_idx = 1
-        end_idx = 2
-        req1 = [
-        {
-            'deleteContentRange': {
-                'range': {
-                    'startIndex': start_idx,
-                    'endIndex': end_idx-1
-                }
+        
+        if is_hold:
+            new_text = self.formulate_holds_text(items, 1)
+        else:
+            new_text = self.formulate_checkouts_text(items, 1)
 
-            }
-        }]
+        new_text += '\n'
 
-        req2 = [{
+        req = [{
             'insertText': {
                 'location': {
                     'index': 1,
@@ -239,11 +251,7 @@ class DurhamLibrary:
 
         print('The title of the document is: {}'.format(document.get('title')))
 
-        if end_idx > 2:
-            service.documents().batchUpdate(
-            documentId=DOCUMENT_ID, body={'requests': req1}).execute()
-        service.documents().batchUpdate(
-        documentId=DOCUMENT_ID, body={'requests': req2}).execute()
+        service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': req}).execute()
 
     def send_checkouts_text(self, data):
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
@@ -278,6 +286,18 @@ class PPL(DurhamLibrary):
         self.driver = driver
 
     def hold_data(self,username,password):
+        '''
+        Logs into the holds page and returns a list of lists of textual data for each hold item
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        A list of list of strings in which every string is a separate line of data from the holds page
+        '''
         res = []
 
         self.login(username,password,url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
@@ -300,6 +320,8 @@ class PPL(DurhamLibrary):
         WebDriverWait(driver=self.driver, timeout=10).until(
             EC.title_is("Checked Out | Pickering Public Library | BiblioCommons")
         )
+
+        save_output_as_html(self.driver.page_source)
 
         checkouts = self.driver.find_elements_by_css_selector("div.cp-batch-actions-list-item")
 
@@ -369,6 +391,7 @@ class WPL(DurhamLibrary):
     def __init__(self,driver):
         super().__init__("Whitby Public Library")
         self.driver = driver
+        print(self.region)
 
     def checkout_data(self,username,password):
         res = []

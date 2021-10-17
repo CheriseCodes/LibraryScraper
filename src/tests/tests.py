@@ -211,8 +211,8 @@ class Library(unittest.TestCase):
         ppl = WPL(driver)
         checkouts = ppl.items_checked_out(self.login_info['w'][0],self.login_info['w'][1])
         driver.close()
-        dl = DurhamLibrary()
-        dl.overwrite_doc(checkouts)
+        dl = DurhamLibrary(ppl.region)
+        dl.append_doc(checkouts, is_hold=False)
 
     def test_generate_mock(self):
         driver = self.create_webdriver()
