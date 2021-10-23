@@ -3,6 +3,43 @@ from abc import ABC, abstractmethod
 # NOTE: ParserRule is just a dictionary that maps each expected piece of data
 # to an index
 
+# TODO: Apply a design pattern here
+class ParseRule(ABC):
+    pass
+
+class DVDRule:
+    def __init__(self,title,format,status_with_subtitle=None,status_without_subtitle=None, 
+    item_date_with_subtitle=None,item_date_without_subtitle=None,branch_with_subtitle=None,branch_without_subtitle=None):
+        """
+        title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
+        item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
+        """
+        self.title=title
+        self.format=format
+        self.status_with_subtitle=status_with_subtitle
+        self.status_without_subtitle=status_without_subtitle
+        self.item_date_with_subtitle=item_date_with_subtitle
+        self.item_date_without_subtitle=item_date_without_subtitle
+        self.branch_with_subtitle=branch_with_subtitle
+        self.branch_without_subtitle=branch_without_subtitle
+
+class BookAndCDRule:
+    def __init__(self,title,format,contributors_with_subtitle=None,contributors_without_subtitle=None, status_with_subtitle=None,status_without_subtitle=None, 
+    item_date_with_subtitle=None,item_date_without_subtitle=None,branch_with_subtitle=None,branch_without_subtitle=None):
+        """
+        title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
+        item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
+        """
+        self.title=title
+        self.format=format
+        self.contributors_with_subtitle=contributors_with_subtitle
+        self.contributors_without_subtitle=contributors_without_subtitle
+        self.status_with_subtitle=status_with_subtitle
+        self.status_without_subtitle=status_without_subtitle
+        self.item_date_with_subtitle=item_date_with_subtitle
+        self.item_date_without_subtitle=item_date_without_subtitle
+        self.branch_with_subtitle=branch_with_subtitle
+        self.branch_without_subtitle=branch_without_subtitle
 
 class LibraryParser(ABC):
     def __init__(self, parse_rule):
@@ -37,10 +74,10 @@ class DurhamParser(LibraryParser):
         super().__init__(parse_rule)
 
     def title(self, data_to_parse):
-        return data_to_parse[self.parse_rule["title"]].rsplit(", ",1)[0]
+        return data_to_parse[self.parse_rule.title].rsplit(", ",1)[0]
 
     def format(self, data_to_parse):
-        return data_to_parse[self.parse_rule["format"]].rsplit(", ",1)[1]
+        return data_to_parse[self.parse_rule.format].rsplit(", ",1)[1]
 
     @staticmethod
     def format(data_to_parse):
@@ -58,9 +95,9 @@ class DurhamParser(LibraryParser):
             has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
        
         if has_subtitle:
-            return data_to_parse[self.parse_rule["contributors_with_subtitle"]]
+            return data_to_parse[self.parse_rule.contributors_with_subtitle]
         else:
-            return data_to_parse[self.parse_rule["contributors_without_subtitle"]]
+            return data_to_parse[self.parse_rule.contributors_without_subtitle]
     
 
 class DurhamHoldParser(DurhamParser):
@@ -81,9 +118,9 @@ class DurhamHoldParser(DurhamParser):
             has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
 
         if has_subtitle:
-            status = data_to_parse[self.parse_rule["status_with_subtitle"]]
+            status = data_to_parse[self.parse_rule.status_with_subtitle]
         else:
-            status = data_to_parse[self.parse_rule["status_without_subtitle"]]
+            status = data_to_parse[self.parse_rule.status_without_subtitle]
 
         if "Not ready" in status:
             return "Not Ready"
@@ -95,9 +132,9 @@ class DurhamHoldParser(DurhamParser):
             has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
 
         if has_subtitle:
-            item_date = data_to_parse[self.parse_rule["item_date_with_subtitle"]]
+            item_date = data_to_parse[self.parse_rule.item_date_with_subtitle]
         else:
-            item_date = data_to_parse[self.parse_rule["item_date_without_subtitle"]]
+            item_date = data_to_parse[self.parse_rule.item_date_without_subtitle]
         
         if "Expires on " in item_date:
             item_date = item_date.replace("Expires on ", "")
@@ -111,9 +148,9 @@ class DurhamHoldParser(DurhamParser):
             has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
         
         if has_subtitle:
-            branch = data_to_parse[self.parse_rule["branch_with_subtitle"]]
+            branch = data_to_parse[self.parse_rule.branch_with_subtitle]
         else:
-            branch = data_to_parse[self.parse_rule["branch_without_subtitle"]]
+            branch = data_to_parse[self.parse_rule.branch_without_subtitle]
         
         return branch.replace("Pick up by ", "")
 

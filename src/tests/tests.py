@@ -24,8 +24,7 @@ class Library(unittest.TestCase):
             Item(date.today(),'Learning React : modern patterns for developing React apps','by Banks, Alex (Software engineer)','Book',False,'Sat 16 Oct','Due Tomorrow','','toronto'), \
             Item(date.today(),'The rope','by Barr','Compact Disc Set',False,'Sat 16 Oct','Due Tomorrow','','toronto'), \
             Item(date.today(),'The object-oriented thought process','by Weisfeld, Matt A.','Book',False,'Wed 20 Oct','Due Later','','toronto'), \
-            Item(date.today(),'Test-driven development with Python : obey the testing goat: using Django, Selenium, and JavaScript','by Percival, Harry','Book',False,'Tue 2 Nov','Due Later','','toronto'), \
-            Item(date.today(),'Merge ; Disciple : [two short novels from crosstown to oblivion]','by Mosley','Compact Disc Set',False,'Tue 2 Nov','Due Later','','toronto')]
+            Item(date.today(),'Test-driven development with Python : obey the testing goat: using Django, Selenium, and JavaScript','by Percival, Harry','Book',False,'Tue 2 Nov','Due Later','','toronto')]        
         
         self.mock_toronto_holds = []
 

@@ -16,12 +16,12 @@ import re
 import requests
 import os # import os.path
 from twilio.rest import Client
-from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser
+from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser, DVDRule, BookAndCDRule
 from libscrape.utils import save_output_as_html
 from datetime import date
 
 class Item:
-    '''
+    """
     A library item
     ...
     Attributes
@@ -41,7 +41,7 @@ class Item:
     -------
     text_to_string()
         Formates the string version of the item that is suitable for presenting directly to the client
-    '''
+    """
     def __init__(self, *args):
         if len(args) == 9:
             self.date_retrieved = args[0] # the date the data was retrieved from the website
@@ -73,6 +73,13 @@ class Item:
         return f"date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors},format={self.format},is_hold={self.is_hold},status={self.status},item_date={self.item_date},branch={self.branch}"
 
     def text_string(self):
+        """
+        Formulates a user-friendly text version of this item and returns the result as a string.
+
+        Returns
+        -------
+        str
+        """
         if self.title == '':
             return ''
 
@@ -81,6 +88,10 @@ class Item:
         else:
             return self.title +  " ("+ self.format + ") " + self.contributors + ' | ' +  (self.status!='')*(self.status + " | ") + self.item_date + self.is_hold*(' | ' + self.branch)
     def generate_mock(self):
+        """
+        Formulates a string version of the command needed to create this object using the Item 
+        constructor then saves the string in mock.txt.
+        """
         f = open("mock.txt", "a")
         new_mock = "Item(date.today(),'" + self.title + "','" + self.contributors + \
             "','" + self.format + "'," + str(self.is_hold) + ",'" + self.item_date + "','" + \
@@ -96,6 +107,17 @@ class DurhamLibrary:
         self.region = region
 
     def select_parser(self, format, parsers):
+        """
+        Returns the correct parser given the format of the item data that is to be parsed
+        ----------
+        format: str
+            The format of the library items
+        parsers: dict
+            Dictionary of parsers such that the key is the format and the value is the expected parser
+        Returns
+        -------
+        dict
+        """
         parser = None
         generic_format = None
         if "DVD" in format:
@@ -110,27 +132,19 @@ class DurhamLibrary:
         return (parser, generic_format)
 
     def parse_hold_data(self, hold_data):
+        """
+        Parses the hold data and returns a list of corresponding Item objects
+
+        Parameters
+        ----------
+        hold_data: str[][]
+            A list of lists of strings which represent data from the holds page split by the newline character
+        Returns
+        -------
+        Item[]
+        """
         res = []
-        parsers = { "DVD": DurhamHoldParser({"title":2,
-                                    "format":2,
-                                    "contributors_with_subtitle": None,
-                                    "contributors_without_subtitle": None,
-                                    "status_with_subtitle":8,
-                                    "status_without_subtitle":7,
-                                    "item_date_with_subtitle": 10,
-                                    "item_date_without_subtitle": 9,
-                                    "branch_with_subtitle":9,
-                                    "branch_without_subtitle": 8}),
-                    "CD_and_Book": DurhamHoldParser({"title":2,
-                                    "format":2,
-                                    "contributors_with_subtitle": 4,
-                                    "contributors_without_subtitle": 3,
-                                    "status_with_subtitle":9,
-                                    "status_without_subtitle":8,
-                                    "item_date_with_subtitle": 11,
-                                    "item_date_without_subtitle": 10,
-                                    "branch_with_subtitle": 10,
-                                    "branch_without_subtitle":9})}
+        parsers = { "DVD": DurhamHoldParser(DVDRule(2,2,8,7,10,9,9,8)), "CD_and_Book": DurhamHoldParser(BookAndCDRule(2,2,4,3,9,8,11,10,10,9))}
 
         for lines in hold_data:
             format = DurhamHoldParser.format(lines)
@@ -147,6 +161,17 @@ class DurhamLibrary:
         return res
 
     def parse_checkout_data(self, checkout_data):
+        """
+        Parses the checkout data and returns a list of corresponding Item objects
+        
+        Parameters
+        ----------
+        hold_data: str[][]
+            A list of lists of strings which represent data from the checkouts page split by the newline character
+        Returns
+        -------
+        Item[]
+        """
         res = []
         parsers = { "DVD": DurhamCheckoutParser({"title":2,
                                     "format":2,
@@ -178,6 +203,19 @@ class DurhamLibrary:
         return res
     
     def formulate_text(self, checkouts, type):
+        """
+        Returns text that will be used as the body of a message that will be sent to the client
+        
+        Parameters
+        ----------
+        checkouts: Item[]
+            A list of Items that contain data that will be listed in the text
+        type: int
+            The type of text message that should be sent (1 for option 1, 2 for option 2)
+        Returns
+        -------
+        str
+        """
         res = ''
         # case 1: plain text
         if type == 1:
@@ -193,17 +231,53 @@ class DurhamLibrary:
         return res
 
     def formulate_checkouts_text(self, checkouts, type):
+        """
+        Returns the complete text that lists current checkouts
+        
+        Parameters
+        ----------
+        checkouts: Item[]
+            A list of Items that contain data that will be listed in the text
+        type: int
+            The type of text message that should be sent (1 for option 1, 2 for option 2)
+        Returns
+        -------
+        str
+        """
         print(self.region)
         res = '\n'+self.region + f" CHECKOUTS ({date.today()}):\n"
         res += self.formulate_text(checkouts, type)
         return res
 
     def formulate_holds_text(self, checkouts, type):
+        """
+        Returns the complete text that lists current holds
+        
+        Parameters
+        ----------
+        holds: Item[]
+            A list of Items that contain data that will be listed in the text
+        type: int
+            The type of text message that should be sent (1 for option 1, 2 for option 2)
+        Returns
+        -------
+        str
+        """
         res = '\n'+self.region + f" HOLDS ({date.today()}):\n"
         res += self.formulate_text(checkouts, type)
         return res
 
     def append_doc(self, items, is_hold):
+        """
+        Appends a report about items to the official Library Summary Google Doc
+        
+        Parameters
+        ----------
+        items: Item[]
+            A list of Items that contain data that will be listed in the report
+        is_hold: bool
+            Indicates if the Items are hold items or checkout items
+        """
         ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
         SCOPES = ['https://www.googleapis.com/auth/documents']
         DOCUMENT_ID = os.environ['LIB_SCRAPER_DOC_ID']
@@ -254,6 +328,17 @@ class DurhamLibrary:
         service.documents().batchUpdate(documentId=DOCUMENT_ID, body={'requests': req}).execute()
 
     def send_checkouts_text(self, data):
+        """
+        Sends a text reporting the current status of checkouts at a Durham Library
+        
+        Parameters
+        ----------
+        data: Item[]
+            A list of Items that contain data that will be listed in the text
+        Returns
+        -------
+        TODO: What is the return type?
+        """
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
         client = Client(account_sid, auth_token)
@@ -267,6 +352,17 @@ class DurhamLibrary:
         return message
 
     def send_holds_text(self, data):
+        """
+        Sends a text reporting the current status of holds at a Durham Library
+        
+        Parameters
+        ----------
+        data: Item[]
+            A list of Items that contain data that will be listed in the text
+        Returns
+        -------
+        TODO: What is the return type?
+        """
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
         client = Client(account_sid, auth_token)
@@ -280,14 +376,15 @@ class DurhamLibrary:
         return message
 
 class PPL(DurhamLibrary):
-    '''Class for Pickering Public Library'''
+    """Class for Pickering Public Library"""
     def __init__(self,driver):
         super().__init__("Pickering Public Library")
         self.driver = driver
 
     def hold_data(self,username,password):
-        '''
+        """
         Logs into the holds page and returns a list of lists of textual data for each hold item
+
         Parameters
         ----------
         username: str
@@ -296,8 +393,8 @@ class PPL(DurhamLibrary):
             The password of the account that will be signed into
         Returns
         -------
-        A list of list of strings in which every string is a separate line of data from the holds page
-        '''
+        str[][]
+        """
         res = []
 
         self.login(username,password,url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
@@ -313,6 +410,19 @@ class PPL(DurhamLibrary):
         return res
 
     def checkout_data(self,username,password):
+        """
+        Logs into the checkouts page and returns a list of lists of textual data for each checkout item
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        str[][]
+        """
         res = []
 
         self.login(username,password,url="https://pickering.bibliocommons.com/user/login?destination=%2Fcheckedout")
@@ -331,19 +441,53 @@ class PPL(DurhamLibrary):
         return res
 
     def items_on_hold(self,username,password):
-        '''Scrapes and returns the items on hold for the user with the login credentials given'''
+        """
+        Scrapes and returns the items on hold for the user with the login credentials given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         # record datetime this data was scraped
         # scrape for items on hold only
         hold_data = self.hold_data(username,password)
         return self.parse_hold_data(hold_data)
 
     def items_checked_out(self,username,password):
-        '''Scrapes and returns the items checked out for the user with the login credentials given'''
+        """
+        Scrapes and returns the items checked out for the user with the login credentials given
+        
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         checkout_data = self.checkout_data(username,password)
         return self.parse_checkout_data(checkout_data)
 
     def hours(self, branch):
-        '''Scrapes the website for the hours of this branch'''
+        """
+        Scrapes the website for the hours of this branch
+        
+        Parameters
+        ----------
+        branch: str
+            The branch of which hours will be retrieved
+        Returns
+        -------
+        str
+        """
         if "Central" in branch:
             self.driver.get("https://pickeringlibrary.ca/locations/PC/")
             container = self.driver.find_element(By.CLASS_NAME, "location-summary-wrapper")
@@ -363,11 +507,21 @@ class PPL(DurhamLibrary):
         else:
             raise NoSuchElementException(f"Hours for {branch} cannot be found because the branch does not exist")
 
-
         return ""
 
     def login(self,username,password,url="https://pickering.bibliocommons.com/user/login?destination=https%3A%2F%2Fpickeringlibrary.ca"):
-        '''Applies login credentials to the url given'''
+        """
+        Applies login credentials to the url given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        url: str
+            The url which the login credentials will be applied to
+        """
         self.driver.get(url)
         try:
             user_login = WebDriverWait(driver=self.driver, timeout=10).until(
@@ -387,13 +541,26 @@ class PPL(DurhamLibrary):
                 raise(e)
 
 class WPL(DurhamLibrary):
-    '''Class for Whitby Public Library'''
+    """Class for Whitby Public Library"""
     def __init__(self,driver):
         super().__init__("Whitby Public Library")
         self.driver = driver
         print(self.region)
 
     def checkout_data(self,username,password):
+        """
+        Logs into the checkouts page and returns a list of lists of textual data for each checkout item
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        str[][]
+        """
         res = []
         self.login(username,password,url="https://whitby.bibliocommons.com/v2/checkedout")
 
@@ -410,6 +577,19 @@ class WPL(DurhamLibrary):
         return res
 
     def hold_data(self,username,password):
+        """
+        Logs into the holds page and returns a list of lists of textual data for each hold item
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        str[][]
+        """
         res = []
         self.login(username,password,url="https://whitby.bibliocommons.com/v2/holds")
 
@@ -425,18 +605,52 @@ class WPL(DurhamLibrary):
         return res
 
     def items_on_hold(self,username,password):
-        '''Scrapes and returns the items on hold for the user with the login credentials given'''
+        """
+        Scrapes and returns the items on hold for the user with the login credentials given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         # scrape for items on hold only
         hold_data = self.hold_data(username,password)
         return self.parse_hold_data(hold_data)
 
     def items_checked_out(self,username,password):
-        '''Scrapes and returns the items checked out for the user with the login credentials given'''
+        """
+        Scrapes and returns the items on checked for the user with the login credentials given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         checkout_data = self.checkout_data(username,password)
         return self.parse_checkout_data(checkout_data)
 
     def hours(self,branch):
-        '''Scrapes and returns the hours for the given branch'''
+        """
+        Scrapes the website for the hours of this branch
+        
+        Parameters
+        ----------
+        branch: str
+            The branch of which hours will be retrieved
+        Returns
+        -------
+        str
+        """
     
         self.driver.get("https://www.whitbylibrary.ca/hours")
 
@@ -453,7 +667,18 @@ class WPL(DurhamLibrary):
             return ''
 
     def login(self, username,password,url='https://whitby.bibliocommons.com/user/login?destination=%2Fuser_dashboard'):
-        '''Enters login info to the url given'''
+        """
+        Applies login credentials to the url given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        url: str
+            The url which the login credentials will be applied to
+        """
         self.driver.get(url)
         # if this instance of the library is connected to a particular user, log them in
         try:
@@ -474,7 +699,7 @@ class WPL(DurhamLibrary):
             if not('Whitby Public Library' in self.driver.title): 
                 raise(e)
 class TPL:
-    '''Class for Toronto Public Library'''
+    """Class for Toronto Public Library"""
     def __init__(self, driver):
         self.driver = driver
         self.name = "Toronto Public Library"
@@ -492,6 +717,19 @@ class TPL:
             return Item(date, data[0],data[1],data[2],is_hold,data[4],status,'', 'toronto')
 
     def hold_data(self,username,password):
+        """
+        Logs into the holds page and returns a list of lists of textual data for each hold item
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        str[][]
+        """
         res = []
         holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
         self.login(username, password,url=holds_url)
@@ -508,6 +746,19 @@ class TPL:
         return res
 
     def checkout_data(self,username,password):
+        """
+        Logs into the checkouts page and returns a list of lists of textual data for each checkout item
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        str[][]
+        """
         res = []
         checkout_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts"
         self.login(username, password,url=checkout_url)
@@ -525,7 +776,19 @@ class TPL:
         return res
 
     def items_on_hold(self,username,password):
-        '''Scrapes and returns the items on hold for the user with the login credentials given'''
+        """
+        Scrapes and returns the items on hold for the user with the login credentials given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         hold_data = self.hold_data(username,password)
         res = []
         if hold_data:
@@ -536,7 +799,19 @@ class TPL:
 
 
     def items_checked_out(self, username, password):
-        '''Scrapes and returns the items checked out for the user with the login credentials given'''
+        """
+        Scrapes and returns the items on checked for the user with the login credentials given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        Returns
+        -------
+        Item[]
+        """
         res = []
         checkout_data = self.checkout_data(username,password)
         for lines in checkout_data:
@@ -545,7 +820,17 @@ class TPL:
         return res
 
     def hours(self,branch):
-        '''Scrapes the website for the hours for the given branch'''
+        """
+        Scrapes the website for the hours of this branch
+        
+        Parameters
+        ----------
+        branch: str
+            The branch of which hours will be retrieved
+        Returns
+        -------
+        str
+        """
         first_letter = branch[0]
         self.driver.get("https://www.torontopubliclibrary.ca/branches/")
         alpha_selector = "alphaIndex-" + first_letter
@@ -568,7 +853,18 @@ class TPL:
         return ""
 
     def login(self,username,password,url='https://account.torontopubliclibrary.ca/login'):
-        '''Enters login info to the url given'''
+        """
+        Applies login credentials to the url given
+
+        Parameters
+        ----------
+        username: str
+            The username of the account that will be signed into
+        password: str
+            The password of the account that will be signed into
+        url: str
+            The url which the login credentials will be applied to
+        """
         self.driver.get(url)
         user_login = self.driver.find_element_by_id("userID")
         pass_login = self.driver.find_element_by_id("password")
