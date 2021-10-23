@@ -16,9 +16,10 @@ import re
 import requests
 import os # import os.path
 from twilio.rest import Client
-from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser, DVDHoldRule, BookAndCDHoldRule, DVDCheckoutRule, BookAndCDCheckoutRule
+#from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser, DurhamDVDHoldRule, DurhamBookAndCDHoldRule, DurhamDVDCheckoutRule, DurhamBookAndCDCheckoutRule
+from libscrape.libparser import *
 from libscrape.utils import save_output_as_html
-from datetime import date
+from datetime import date, datetime
 
 class Item:
     """
@@ -144,7 +145,7 @@ class DurhamLibrary:
         Item[]
         """
         res = []
-        parsers = { "DVD": DurhamHoldParser(DVDHoldRule(2,2,8,7,10,9,9,8)), "CD_and_Book": DurhamHoldParser(BookAndCDHoldRule(2,2,4,3,9,8,11,10,10,9))}
+        parsers = { "DVD": DurhamHoldParser(DurhamDVDHoldRule(2,2,8,7,10,9,9,8)), "CD_and_Book": DurhamHoldParser(DurhamBookAndCDHoldRule(2,2,4,3,9,8,11,10,10,9))}
         for lines in hold_data:
             format = DurhamHoldParser.format(lines)
             parser, generic_format = self.select_parser(format,parsers)
@@ -172,7 +173,7 @@ class DurhamLibrary:
         Item[]
         """
         res = []
-        parsers = { "DVD": DurhamCheckoutParser(DVDCheckoutRule(2,2,7,6,9,7)), "CD_and_Book": DurhamCheckoutParser(BookAndCDCheckoutRule(2,2,4,3,8,7,9,8))}
+        parsers = { "DVD": DurhamCheckoutParser(DurhamDVDCheckoutRule(2,2,7,6,9,7)), "CD_and_Book": DurhamCheckoutParser(DurhamBookAndCDCheckoutRule(2,2,4,3,8,7,9,8))}
         for lines in checkout_data:
             format = DurhamCheckoutParser.format(lines)
             parser, generic_format = self.select_parser(format,parsers)
@@ -686,6 +687,17 @@ class TPL:
         self.driver = driver
         self.name = "Toronto Public Library"
 
+    def parse_hold_data(self, hold_data):
+        parser = TorontoHoldParser(TorontoHoldParseRule(0,2,1,5,3))
+        title, format, contributors, item_date, status, branch = parser.all(hold_data)
+        return Item(date.today(),title,contributors,format,True, item_date,status, branch, 'toronto')
+
+    def parse_checkout_data(self, checkout_data):
+        parser = TorontoCheckoutParser(TorontoCheckoutParseRule(0,2,1,4,-2))
+        title, format, contributors, item_date, status = parser.all(checkout_data)
+        print(title, format, contributors, item_date, status)
+        return Item(date.today(),title,contributors,format,False, item_date,status, '','toronto')
+
     def create_item_object(self, date, is_hold, data):
         if is_hold:
             return Item(date,data[0],data[1],data[2],is_hold,data[5],'Ready',data[3], 'toronto')
@@ -775,7 +787,7 @@ class TPL:
         res = []
         if hold_data:
             for lines in hold_data:
-                hold_item = self.create_item_object(date.today(),True,lines)
+                hold_item = self.parse_hold_data(lines)
                 res.append(hold_item)
         return res
 
@@ -796,9 +808,13 @@ class TPL:
         """
         res = []
         checkout_data = self.checkout_data(username,password)
+        print(checkout_data)
         for lines in checkout_data:
-            checkout_item = self.create_item_object(date.today(),False,lines)
+            checkout_item = self.parse_checkout_data(lines)
+            print(checkout_item)
             res.append(checkout_item)
+
+        print(res)
         return res
 
     def hours(self,branch):
