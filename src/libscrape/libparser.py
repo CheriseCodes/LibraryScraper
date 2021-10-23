@@ -5,41 +5,90 @@ from abc import ABC, abstractmethod
 
 # TODO: Apply a design pattern here
 class ParseRule(ABC):
-    pass
+    @abstractmethod
+    def __init__(self, title, format):
+        pass
 
-class DVDRule:
+class DurhamParseRule(ParseRule):
+    def __init__(self,title, format,status_with_subtitle=None,status_without_subtitle=None, 
+    item_date_with_subtitle=None,item_date_without_subtitle=None):
+        super().__init__(title,format)
+        self.status_with_subtitle=status_with_subtitle
+        self.status_without_subtitle=status_without_subtitle
+        self.item_date_with_subtitle=item_date_with_subtitle
+        self.item_date_without_subtitle=item_date_without_subtitle
+
+class DVDHoldRule(DurhamParseRule):
     def __init__(self,title,format,status_with_subtitle=None,status_without_subtitle=None, 
     item_date_with_subtitle=None,item_date_without_subtitle=None,branch_with_subtitle=None,branch_without_subtitle=None):
         """
         title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
         item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
         """
-        self.title=title
-        self.format=format
-        self.status_with_subtitle=status_with_subtitle
-        self.status_without_subtitle=status_without_subtitle
-        self.item_date_with_subtitle=item_date_with_subtitle
-        self.item_date_without_subtitle=item_date_without_subtitle
+        super().__init__(title,format,status_with_subtitle,status_without_subtitle,item_date_with_subtitle,item_date_without_subtitle)
+        #self.title=title
+        #self.format=format
+        #self.status_with_subtitle=status_with_subtitle
+        #self.status_without_subtitle=status_without_subtitle
+        #self.item_date_with_subtitle=item_date_with_subtitle
+        #self.item_date_without_subtitle=item_date_without_subtitle
         self.branch_with_subtitle=branch_with_subtitle
         self.branch_without_subtitle=branch_without_subtitle
 
-class BookAndCDRule:
+class DVDCheckoutRule(DurhamParseRule):
+    def __init__(self,title,format,status_with_subtitle=None,status_without_subtitle=None, 
+    item_date_with_subtitle=None,item_date_without_subtitle=None):
+        """
+        title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
+        item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
+        """
+        super().__init__(title,format,status_with_subtitle,status_without_subtitle,item_date_with_subtitle,item_date_without_subtitle)
+        #self.title=title
+        #self.format=format
+        #self.status_with_subtitle=status_with_subtitle
+        #self.status_without_subtitle=status_without_subtitle
+        #self.item_date_with_subtitle=item_date_with_subtitle
+        #self.item_date_without_subtitle=item_date_without_subtitle
+        #self.branch_with_subtitle=branch_with_subtitle
+        #self.branch_without_subtitle=branch_without_subtitle
+
+class BookAndCDHoldRule(DurhamParseRule):
     def __init__(self,title,format,contributors_with_subtitle=None,contributors_without_subtitle=None, status_with_subtitle=None,status_without_subtitle=None, 
     item_date_with_subtitle=None,item_date_without_subtitle=None,branch_with_subtitle=None,branch_without_subtitle=None):
         """
         title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
         item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
         """
-        self.title=title
-        self.format=format
+        super().__init__(title,format,status_with_subtitle,status_without_subtitle,item_date_with_subtitle,item_date_without_subtitle)
+        #self.title=title
+        #self.format=format
         self.contributors_with_subtitle=contributors_with_subtitle
         self.contributors_without_subtitle=contributors_without_subtitle
-        self.status_with_subtitle=status_with_subtitle
-        self.status_without_subtitle=status_without_subtitle
-        self.item_date_with_subtitle=item_date_with_subtitle
-        self.item_date_without_subtitle=item_date_without_subtitle
+        #self.status_with_subtitle=status_with_subtitle
+        #self.status_without_subtitle=status_without_subtitle
+        #self.item_date_with_subtitle=item_date_with_subtitle
+        #self.item_date_without_subtitle=item_date_without_subtitle
         self.branch_with_subtitle=branch_with_subtitle
         self.branch_without_subtitle=branch_without_subtitle
+
+class BookAndCDCheckoutRule(DurhamParseRule):
+    def __init__(self,title,format,contributors_with_subtitle=None,contributors_without_subtitle=None, status_with_subtitle=None,status_without_subtitle=None, 
+    item_date_with_subtitle=None,item_date_without_subtitle=None):
+        """
+        title,format,contributors_with_subtitle,contributors_without_subtitle, status_with_subtitle,status_without_subtitle, 
+        item_date_with_subtitle,item_date_without_subtitle,branch_with_subtitle,branch_without_subtitle
+        """
+        super().__init__(title,format,status_with_subtitle,status_without_subtitle,item_date_with_subtitle,item_date_without_subtitle)
+        #self.title=title
+        #self.format=format
+        self.contributors_with_subtitle=contributors_with_subtitle
+        self.contributors_without_subtitle=contributors_without_subtitle
+        #self.status_with_subtitle=status_with_subtitle
+        #self.status_without_subtitle=status_without_subtitle
+        #self.item_date_with_subtitle=item_date_with_subtitle
+        #self.item_date_without_subtitle=item_date_without_subtitle
+        #self.branch_with_subtitle=branch_with_subtitle
+        #self.branch_without_subtitle=branch_without_subtitle
 
 class LibraryParser(ABC):
     def __init__(self, parse_rule):
@@ -194,9 +243,9 @@ class DurhamCheckoutParser(DurhamParser):
             has_subtitle = DurhamCheckoutParser.has_subtitle(data_to_parse)
 
         if has_subtitle:
-            status = data_to_parse[self.parse_rule["status_with_subtitle"]]
+            status = data_to_parse[self.parse_rule.status_with_subtitle]
         else:
-            status = data_to_parse[self.parse_rule["status_without_subtitle"]]
+            status = data_to_parse[self.parse_rule.status_without_subtitle]
 
         if "Due soon" in status:
             return "Due Soon"
@@ -210,9 +259,9 @@ class DurhamCheckoutParser(DurhamParser):
             has_subtitle = DurhamHoldParser.has_subtitle(data_to_parse)
 
         if has_subtitle:
-            item_date = data_to_parse[self.parse_rule["item_date_with_subtitle"]]
+            item_date = data_to_parse[self.parse_rule.item_date_with_subtitle]
         else:
-            item_date = data_to_parse[self.parse_rule["item_date_without_subtitle"]]
+            item_date = data_to_parse[self.parse_rule.item_date_without_subtitle]
         
         item_date = item_date.replace("Due by ", "")
         

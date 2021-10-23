@@ -16,7 +16,7 @@ import re
 import requests
 import os # import os.path
 from twilio.rest import Client
-from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser, DVDRule, BookAndCDRule
+from libscrape.libparser import DurhamHoldParser, DurhamCheckoutParser, DVDHoldRule, BookAndCDHoldRule, DVDCheckoutRule, BookAndCDCheckoutRule
 from libscrape.utils import save_output_as_html
 from datetime import date
 
@@ -144,8 +144,7 @@ class DurhamLibrary:
         Item[]
         """
         res = []
-        parsers = { "DVD": DurhamHoldParser(DVDRule(2,2,8,7,10,9,9,8)), "CD_and_Book": DurhamHoldParser(BookAndCDRule(2,2,4,3,9,8,11,10,10,9))}
-
+        parsers = { "DVD": DurhamHoldParser(DVDHoldRule(2,2,8,7,10,9,9,8)), "CD_and_Book": DurhamHoldParser(BookAndCDHoldRule(2,2,4,3,9,8,11,10,10,9))}
         for lines in hold_data:
             format = DurhamHoldParser.format(lines)
             parser, generic_format = self.select_parser(format,parsers)
@@ -173,24 +172,7 @@ class DurhamLibrary:
         Item[]
         """
         res = []
-        parsers = { "DVD": DurhamCheckoutParser({"title":2,
-                                    "format":2,
-                                    "contributors_with_subtitle": None,
-                                    "contributors_without_subtitle": None,
-                                    "status_with_subtitle":7,
-                                    "status_without_subtitle":6,
-                                    "item_date_with_subtitle": 8,
-                                    "item_date_without_subtitle": 7
-                                    }),
-                    "CD_and_Book": DurhamCheckoutParser({"title":2,
-                                    "format":2,
-                                    "contributors_with_subtitle": 4,
-                                    "contributors_without_subtitle": 3,
-                                    "status_with_subtitle":8,
-                                    "status_without_subtitle":7,
-                                    "item_date_with_subtitle": 9,
-                                    "item_date_without_subtitle": 8
-                                    })}
+        parsers = { "DVD": DurhamCheckoutParser(DVDCheckoutRule(2,2,7,6,9,7)), "CD_and_Book": DurhamCheckoutParser(BookAndCDCheckoutRule(2,2,4,3,8,7,9,8))}
         for lines in checkout_data:
             format = DurhamCheckoutParser.format(lines)
             parser, generic_format = self.select_parser(format,parsers)
