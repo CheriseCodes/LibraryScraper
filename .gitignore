@@ -8,4 +8,7 @@ credentials.json
 token.json
 mock.txt
 secret/
-sample.html
+.idea/
+.DS_Store
+sample_pages/
+txt_logs/
