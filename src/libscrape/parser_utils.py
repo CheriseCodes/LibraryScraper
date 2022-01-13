@@ -20,7 +20,7 @@ def save_output_as_html(contents, title):
     title: the title of the html file
     """
     html_title = title + date.today().strftime("-%b-%d-%Y") + '.html'
-    full_path = curr_path + '/../tests/sample_pages/' + html_title
+    full_path = curr_path + '/../libscrape/sample_pages/' + html_title
     f = open(full_path, 'w', encoding='utf-8')
     f.write(contents)
     f.close()
@@ -37,7 +37,7 @@ def save_output_as_txt(contents, title):
     title: the title of the plain text file
     """
     txt_title = title + date.today().strftime("-%b-%d-%Y") + '.txt'
-    full_path = curr_path + '/../tests/txt_logs/' + txt_title
+    full_path = curr_path + '/../libscrape/txt_logs/' + txt_title
     f = open(full_path, 'w', encoding='utf-8')
     f.write(contents)
     f.close()

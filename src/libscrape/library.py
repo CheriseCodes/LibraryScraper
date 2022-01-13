@@ -11,17 +11,19 @@ Available classes:
 
 from __future__ import print_function
 
+from bs4 import BeautifulSoup
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-from libscrape.lib_parser import *
-from libscrape.parse_rule import *
+from lib_parser import *
+from parse_rule import *
 
-from libscrape.parser_utils import *
+from parser_utils import *
 from datetime import date
-from libscrape.lib_assets import *
+from lib_assets import *
 
 
 class DurhamLibrary:
@@ -123,11 +125,12 @@ class PPL(DurhamLibrary):
         - driver: an instance of a Selenium Chrome web driver
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver=None):
         super().__init__("Pickering Public Library")
         self.driver = driver
 
-    def hold_data(self, username, password):
+    @staticmethod
+    def hold_data(page_source):
         """
         Logs into the holds page and returns a list of lists of textual data for each hold item
 
@@ -142,47 +145,39 @@ class PPL(DurhamLibrary):
         str[][]
         """
         res = []
-
-        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.title_is("On Hold | Pickering Public Library | BiblioCommons")
-        )
-        holds = self.driver.find_elements_by_css_selector("div.cp-batch-actions-list-item")
-
+        soup = BeautifulSoup(page_source, "html.parser")
+        holds = soup.select("div.cp-batch-actions-list-item")
         for item in holds:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
         return res
 
-    def checkout_data(self, username, password):
+    @staticmethod
+    def checkout_data(page_source):
         """
         Logs into the checkouts page and returns a list of lists of textual data for each checkout item
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
+        page_source: plain text html of a checkout page
+
         Returns
         -------
         str[][]
         """
         res = []
-
-        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fcheckedout")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.title_is("Checked Out | Pickering Public Library | BiblioCommons")
-        )
-
         #save_output_as_html(self.driver.page_source, "ppl-checkouts")
-
-        checkouts = self.driver.find_elements_by_css_selector("div.cp-batch-actions-list-item")
+        soup = BeautifulSoup(page_source, "html.parser")
+        checkouts = soup.select("div.cp-batch-actions-list-item")
 
         for item in checkouts:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
         return res
 
@@ -202,7 +197,12 @@ class PPL(DurhamLibrary):
         """
         # record datetime this data was scraped
         # scrape for items on hold only
-        hold_data = self.hold_data(username, password)
+        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.title_is("On Hold | Pickering Public Library | BiblioCommons")
+        )
+        hold_data = self.hold_data(self.driver.page_source)
         return self.parse_hold_data(hold_data)
 
     def items_checked_out(self, username, password):
@@ -219,7 +219,12 @@ class PPL(DurhamLibrary):
         -------
         Item[]
         """
-        checkout_data = self.checkout_data(username, password)
+        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fcheckedout")
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.title_is("Checked Out | Pickering Public Library | BiblioCommons")
+        )
+        checkout_data = self.checkout_data(self.driver.page_source)
         return self.parse_checkout_data(checkout_data)
 
     def hours(self, branch):
@@ -294,11 +299,12 @@ class WPL(DurhamLibrary):
         - driver: an instance of a Selenium Chrome web driver
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver=None):
         super().__init__("Whitby Public Library")
         self.driver = driver
 
-    def checkout_data(self, username, password):
+    @staticmethod
+    def checkout_data(page_source):
         """
         Logs into the checkouts page and returns a list of lists of textual data for each checkout item
 
@@ -313,22 +319,23 @@ class WPL(DurhamLibrary):
         str[][]
         """
         res = []
-        self.login(username, password, url="https://whitby.bibliocommons.com/v2/checkedout")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'cp-item-list')))
-
+        soup = BeautifulSoup(page_source, "html.parser")
+        checkouts = soup.find_all("div", class_="cp-batch-actions-list-item")
         # locate the checkouts
-        check_out_container = self.driver.find_element(By.CLASS_NAME, 'cp-item-list')
-        checkouts = check_out_container.find_elements(By.CLASS_NAME, 'cp-batch-actions-list-item')
+        #check_out_container = self.driver.find_element(By.CLASS_NAME, 'cp-item-list')
+        #checkouts = check_out_container.find_elements(By.CLASS_NAME, )
 
         for item in checkouts:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
 
         return res
 
-    def hold_data(self, username, password):
+    @staticmethod
+    def hold_data(page_source):
         """
         Logs into the holds page and returns a list of lists of textual data for each hold item
 
@@ -343,19 +350,18 @@ class WPL(DurhamLibrary):
         str[][]
         """
         res = []
-        self.login(username, password, url="https://whitby.bibliocommons.com/v2/holds")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'cp-item-list')))
         # locate the checkouts
         # save_output_as_html(self.driver.page_source, "wpl-hold-data-library-py")
-        holds_container = self.driver.find_element(By.CLASS_NAME, 'cp-item-list')
-        holds = holds_container.find_elements(By.CLASS_NAME, 'cp-batch-actions-list-item')
+        soup = BeautifulSoup(page_source, "html.parser")
+        holds = soup.find_all("div", class_='cp-batch-actions-list-item')
 
         for item in holds:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
-        print(res)
+        #print(res)
         return res
 
     def items_on_hold(self, username, password):
@@ -372,8 +378,12 @@ class WPL(DurhamLibrary):
         -------
         Item[]
         """
+        self.login(username, password, url="https://whitby.bibliocommons.com/v2/holds")
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'cp-item-list')))
         # scrape for items on hold only
-        hold_data = self.hold_data(username, password)
+        hold_data = self.hold_data(self.driver.page_source)
         return self.parse_hold_data(hold_data)
 
     def items_checked_out(self, username, password):
@@ -390,7 +400,11 @@ class WPL(DurhamLibrary):
         -------
         Item[]
         """
-        checkout_data = self.checkout_data(username, password)
+        self.login(username, password, url="https://whitby.bibliocommons.com/v2/checkedout")
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.presence_of_all_elements_located((By.CLASS_NAME, "cp-item-list")))
+        checkout_data = self.checkout_data(self.driver.page_source)
         return self.parse_checkout_data(checkout_data)
 
     def hours(self, branch):
@@ -461,7 +475,7 @@ class TPL:
         - driver: an instance of a Selenium Chrome web driver
     """
 
-    def __init__(self, driver):
+    def __init__(self, driver=None):
         self.driver = driver
         self.name = "Toronto Public Library"
 
@@ -491,7 +505,8 @@ class TPL:
 
             return Item(item_date, data[0], data[1], data[2], is_hold, data[4], status, '', 'toronto')
 
-    def hold_data(self, username, password):
+    @staticmethod
+    def hold_data(page_source):
         """
         Logs into the holds page and returns a list of lists of textual data for each hold item
 
@@ -506,27 +521,22 @@ class TPL:
         str[][]
         """
         res = []
-        holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
-        self.login(username, password, url=holds_url)
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_all_elements_located(
-                (By.CSS_SELECTOR, "#PageContent > div.holds-redux"))
-        )
-
-        on_hold = self.driver.find_elements_by_css_selector("#PageContent > div.holds-redux.ready-for-pickup > div" +
-                                                            " > div > table > tbody")
+        soup = BeautifulSoup(page_source, "html.parser")
+        on_hold = soup.select("#PageContent > div.holds-redux.ready-for-pickup > div > div > table > tbody")
         # on_hold = self.driver.find_elements(By.CSS_SELECTOR, "#PageContent > div.holds-redux.ready-for-pickup
         # > div > div > table > tbody")
         # save_output_as_html(self.driver.page_source, "tpl-holds-raw")
         for item in on_hold:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
 
         #save_output_as_txt(str(res), "tpl-hold-data-raw")
         return res
-
-    def checkout_data(self, username, password):
+    @staticmethod
+    def checkout_data(page_source):
         """
         Logs into the checkouts page and returns a list of lists of textual data for each checkout item
 
@@ -541,15 +551,13 @@ class TPL:
         str[][]
         """
         res = []
-        checkout_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts"
-        self.login(username, password, url=checkout_url)
-
-        checkouts = WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_all_elements_located((By.CLASS_NAME, "item-wrapper"))
-        )
-
+        soup = BeautifulSoup(page_source, "html.parser")
+        checkouts = soup.find_all(class_="item-wrapper")
         for item in checkouts:
-            lines = item.text.split('\n')
+            plain_text = item.get_text('\n')
+            #print(plain_text)
+            lines = plain_text.split('\n')
+            #print(lines)
             res.append(lines)
         #save_output_as_txt(str(res), 'tpl-checkouts-raw')
         return res
@@ -568,7 +576,16 @@ class TPL:
         -------
         Item[]
         """
-        hold_data = self.hold_data(username, password)
+        res = []
+        holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
+        self.login(username, password, url=holds_url)
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.visibility_of_all_elements_located(
+                (By.CSS_SELECTOR, "#PageContent > div.holds-redux"))
+        )
+
+        hold_data = self.hold_data(self.driver.page_source)
         res = []
         if hold_data:
             for lines in hold_data:
@@ -591,14 +608,21 @@ class TPL:
         Item[]
         """
         res = []
-        checkout_data = self.checkout_data(username, password)
-        print(checkout_data)
+        checkout_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts"
+        self.login(username, password, url=checkout_url)
+
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.visibility_of_all_elements_located((By.CLASS_NAME, "item-wrapper"))
+        )
+
+        checkout_data = self.checkout_data(self.driver.page_source)
+        #print(checkout_data)
         for lines in checkout_data:
             checkout_item = self.parse_checkout_data(lines)
-            print(checkout_item)
+            #print(checkout_item)
             res.append(checkout_item)
 
-        print(res)
+        #print(res)
         return res
 
     def hours(self, branch):

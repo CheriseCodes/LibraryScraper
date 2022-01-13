@@ -89,8 +89,8 @@ class Messenger:
     """
     Used to formulate and send text messages on behalf of the library
     """
-    def __init__(self, library):
-        self.library = library
+    def __init__(self, region):
+        self.region = region
 
     @staticmethod
     def text_string(lib_item):
@@ -155,7 +155,7 @@ class Messenger:
         -------
         str
         """
-        res = '\n' + self.library.region + f" CHECKOUTS ({date.today()}):\n"
+        res = '\n' + self.region + f" CHECKOUTS ({date.today()}):\n"
         res += self.formulate_text(checkouts, text_type)
         return res
 
@@ -168,12 +168,12 @@ class Messenger:
         holds: Item[]
             A list of Items that contain data that will be listed in the text
         text_type: int
-            The type of text message that should be sent (1 for option 1, 2 for option 2)
+            The type of text message that should be sent (1 for plain text, 2 for google doc)
         Returns
         -------
         str
         """
-        res = '\n' + self.library.region + f" HOLDS ({date.today()}):\n"
+        res = '\n' + self.region + f" HOLDS ({date.today()}):\n"
         res += self.formulate_text(holds, text_type)
         return res
 
@@ -252,7 +252,7 @@ class Messenger:
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
         client = Client(account_sid, auth_token)
-        res = self.formulate_checkouts_text(data)
+        res = self.formulate_checkouts_text(data, 2)
         message = client.messages \
             .create(
             body=res,
