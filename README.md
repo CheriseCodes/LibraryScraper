@@ -12,4 +12,8 @@ python3 -m pip install -r requirements.txt
 
 An example of how to use this program with the Toronto Public Library System can be found in src/libscrape/examples
 
-**Compatibly Library Systems:** Pickering Public Library, Whitby Public Library, Toronto Public Library 
+## Compatible Library Systems
+
+* Pickering Public Library
+* Whitby Public Library
+* Toronto Public Library 
