@@ -19,7 +19,7 @@ from twilio.rest import Client
 class Item:
     """
     A library item
-    ...
+
     Attributes
     ----------
     data_received: datetime.date
@@ -32,63 +32,51 @@ class Item:
     status: str
     branch: str
     system: str
-
-    Methods
-    -------
-    text_to_string()
-        Formats the string version of the item that is suitable for presenting directly to the client
     """
 
-    def __init__(self, *args):
-
-        if len(args) == 9:
-            self.date_retrieved = args[0]  # the date the data was retrieved from the website
-            self.title = args[1]
-            self.item_format = args[3]
-            self.is_hold = args[4]  # HOLD=0, CHECKOUT=1
-            self.status = args[6]  # the status of the item depending on _type
-            self.item_date = args[5]  # the pick up date or due date depending on _type
-            self.branch = args[7]
-            self.system = args[8]
-            if self.system == 'toronto':
-                contrib_lst = args[2].rsplit(',', 1)
-                contributors = contrib_lst[0]
-                self.contributors = 'by ' + contributors
-            else:
-                self.contributors = args[2]
+    def __init__(self, date_retrieved=None, title=None, item_format=None, is_hold=None, status=None, item_date=None,
+                 branch=None, system=None, contributors=None):
+        self.date_retrieved = date_retrieved  # the date the data was retrieved from the website
+        self.title = title
+        self.item_format = item_format
+        self.is_hold = is_hold  # HOLD=0, CHECKOUT=1
+        self.status = status  # the status of the item depending on _type
+        self.item_date = item_date  # the pick up date or due date depending on _type
+        self.branch = branch
+        self.system = system
+        if self.system == 'toronto':
+            contrib_lst = contributors.rsplit(',', 1)
+            contributors = contrib_lst[0]
+            self.contributors = 'by ' + contributors
         else:
-            self.date_retrieved = ''
-            self.title = ''
-            self.item_format = ''
-            self.is_hold = ''
-            self.status = ''
-            self.item_date = ''
-            self.branch = ''
-            self.system = ''
-            self.contributors = ''
+            self.contributors = contributors
+
+    def __eq__(self, __o: object) -> bool:
+        return (__o.title == self.title) and (__o.item_format == self.item_format) and (
+                    __o.is_hold == self.is_hold) and (__o.status == self.status) and (
+                           __o.item_date == self.item_date) and (__o.branch == self.branch) and (
+                           __o.system == self.system) and (__o.contributors == self.contributors)
 
     def __str__(self):
-        return f"date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors},"
-        + f"item_format={self.item_format},is_hold={self.is_hold},status={self.status},item_date={self.item_date}"
-        + f",branch={self.branch}"
+        return f"Item(date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors}," \
+               + f"item_format={self.item_format},is_hold={self.is_hold},status={self.status}," \
+                f"item_date={self.item_date},branch={self.branch})"
 
     def generate_mock(self):
         """
         Formulates a string version of the command needed to create this object using the Item
-        constructor then saves the string in mock.txt.
+        constructor.
         """
-        f = open("mock.txt", "a")
-        new_mock = "Item(date.today(),'" + self.title + "','" + self.contributors + \
-                   "','" + self.item_format + "'," + str(self.is_hold) + ",'" + self.item_date + "','" + \
-                   self.status + "','" + self.branch + "','" + self.system + "')\n"
-        f.write(new_mock)
-        f.close()
+        new_mock = f"Item(date.today(),{self.title},{self.contributors},{self.item_format},{str(self.is_hold)},"
+        + f"{self.item_date},{self.status},{self.branch},{self.system})"
+        return new_mock
 
 
 class Messenger:
     """
     Used to formulate and send text messages on behalf of the library
     """
+
     def __init__(self, region):
         self.region = region
 
@@ -96,7 +84,10 @@ class Messenger:
     def text_string(lib_item):
         """
         Formulates a user-friendly text version of this item and returns the result as a string.
-
+        Parameters
+        ----------
+        lib_item: Item
+            The Item to represent as a string
         Returns
         -------
         str
@@ -104,13 +95,34 @@ class Messenger:
         if lib_item.title == '':
             return ''
 
+        lib_item_status = ''
+        if lib_item.status != '':
+            lib_item_status = lib_item.status + " | "
+
+        lib_item_branch = ''
+        if lib_item.is_hold:
+            lib_item_branch = ' | ' + lib_item.branch
+        lib_item_title = ''
+        if lib_item.title:
+            lib_item_title = lib_item.title
+
+        lib_item_format = ''
+        if lib_item.item_format:
+            lib_item_format = lib_item.item_format
+
+        lib_item_date = ''
+        if lib_item.item_date:
+            lib_item_date = lib_item.item_date
+
+        lib_item_contributors = ''
+        if lib_item.contributors:
+            lib_item_contributors = lib_item.contributors
+
         if lib_item.contributors == "":
-            return lib_item.title + " (" + lib_item.item_format + ") | " + (lib_item.status != '') * (
-                    lib_item.status + " | ") + lib_item.item_date + lib_item.is_hold * (' | ' + lib_item.branch)
+            return lib_item_title + " (" + lib_item_format + ") | " + lib_item_status + lib_item_date + lib_item_branch
         else:
-            return lib_item.title + " (" + lib_item.item_format + ") " + lib_item.contributors + ' | ' + (
-                    lib_item.status != '') * (lib_item.status + " | ") + lib_item.item_date + lib_item.is_hold * (
-                    ' | ' + lib_item.branch)
+            return lib_item_title + " (" + lib_item_format + ") " + lib_item_contributors + ' | ' + lib_item_status \
+                   + lib_item_date + lib_item_branch
 
     @staticmethod
     def formulate_text(checkouts, text_type):
@@ -121,22 +133,22 @@ class Messenger:
         ----------
         checkouts: Item[]
             A list of Items that contain data that will be listed in the text
-        text_type: int
-            The type of text message that should be sent (1 for option 1, 2 for option 2)
+        text_type: str
+            The type of text message that should be sent ("doc", "plain")
         Returns
         -------
         str
         """
         res = ''
         # case 1: plain text
-        if text_type == 1:
+        if text_type == "plain":
             i = 1
             for item in checkouts:
                 res += str(i) + '. ' + Messenger.text_string(item) + '\n'
                 i += 1
         # case 2: Google doc link
-        elif text_type == 2:
-            res += 'Click here to view your updated report: https://docs.google.com/document/d/' +\
+        elif text_type == "doc":
+            res += 'Click here to view your updated report: https://docs.google.com/document/d/' + \
                    os.environ['LIB_SCRAPER_DOC_ID']
 
         return res
@@ -149,8 +161,8 @@ class Messenger:
         ----------
         checkouts: Item[]
             A list of Items that contain data that will be listed in the text
-        text_type: int
-            The type of text message that should be sent (1 for option 1, 2 for option 2)
+        text_type: str
+            The type of text message that should be sent ("doc", "plain")
         Returns
         -------
         str
@@ -167,8 +179,8 @@ class Messenger:
         ----------
         holds: Item[]
             A list of Items that contain data that will be listed in the text
-        text_type: int
-            The type of text message that should be sent (1 for plain text, 2 for google doc)
+        text_type: str
+            The type of text message that should be sent ("doc", "plain")
         Returns
         -------
         str
@@ -215,9 +227,9 @@ class Messenger:
         # formulate new content
 
         if is_hold:
-            new_text = self.formulate_holds_text(items, 1)
+            new_text = self.formulate_holds_text(items, "plain")
         else:
-            new_text = self.formulate_checkouts_text(items, 1)
+            new_text = self.formulate_checkouts_text(items, "plain")
 
         new_text += '\n'
 
@@ -233,11 +245,11 @@ class Messenger:
         # Retrieve the documents contents from the Docs service.
         document = service.documents().get(documentId=document_id).execute()
 
-        #print('The title of the document is: {}'.format(document.get('title')))
+        # print('The title of the document is: {}'.format(document.get('title')))
 
         service.documents().batchUpdate(documentId=document_id, body={'requests': req}).execute()
 
-    def send_checkouts_text(self, data):
+    def send_checkouts_text(self, phone_number, data, text_type):
         """
         Sends a text reporting the current status of checkouts at a Durham Library
 
@@ -245,6 +257,10 @@ class Messenger:
         ----------
         data: Item[]
             A list of Items that contain data that will be listed in the text
+        phone_number: the phone number that the text will be sent to. Must be in the
+            format \+[0-9]* with the country calling code as a prefix.
+        text_type: str
+            The type of text message that should be sent ("doc", "plain")
         Returns
         -------
         TODO: What is the return type?
@@ -252,16 +268,16 @@ class Messenger:
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
         client = Client(account_sid, auth_token)
-        res = self.formulate_checkouts_text(data, 2)
+        res = self.formulate_checkouts_text(data, text_type)
         message = client.messages \
             .create(
             body=res,
             from_=os.environ['TWILIO_FROM'],
-            to=os.environ['TWILIO_TO']
+            to=phone_number
         )
         return message
 
-    def send_holds_text(self, data):
+    def send_holds_text(self, phone_number, data, text_type):
         """
         Sends a text reporting the current status of holds at a Durham Library
 
@@ -269,6 +285,10 @@ class Messenger:
         ----------
         data: Item[]
             A list of Items that contain data that will be listed in the text
+        phone_number: the phone number that the text will be sent to. Must be in the
+            format \+[0-9]* with the country calling code as a prefix.
+        text_type: str
+            The type of text message that should be sent ("doc", "plain")
         Returns
         -------
         An HTTP response attained after sending the text using the Twilio API
@@ -276,11 +296,10 @@ class Messenger:
         account_sid = os.environ['TWILIO_ACCOUNT_SID']
         auth_token = os.environ['TWILIO_AUTH_TOKEN']
         client = Client(account_sid, auth_token)
-        res = self.formulate_holds_text(data)
+        res = self.formulate_holds_text(data, text_type)
         message = client.messages.create(
             body=res,
             from_=os.environ['TWILIO_FROM'],
-            to=os.environ['TWILIO_TO']
+            to=phone_number
         )
         return message
-

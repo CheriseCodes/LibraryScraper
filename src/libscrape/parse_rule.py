@@ -21,6 +21,7 @@ class DurhamParseRule:
         - item_date_without_subtitle: the index of the library item's pickup/return date if the subtitle isn't included
             in the item's data
     """
+
     def __init__(self, title, item_format, status_with_subtitle=None, status_without_subtitle=None,
                  item_date_with_subtitle=None, item_date_without_subtitle=None):
         self.title = title
@@ -51,6 +52,7 @@ class DurhamDVDHoldRule(DurhamParseRule):
         - branch_without_subtitle: the index of the library item's pickup branch location if the subtitle isn't included
             in the item's data
     """
+
     def __init__(self, title, item_format, status_with_subtitle=None, status_without_subtitle=None,
                  item_date_with_subtitle=None, item_date_without_subtitle=None, branch_with_subtitle=None,
                  branch_without_subtitle=None):
@@ -76,6 +78,7 @@ class DurhamDVDCheckoutRule(DurhamParseRule):
         - item_date_without_subtitle: the index of the library item's return date if the subtitle isn't included
             in the item's data
     """
+
     def __init__(self, title, item_format, status_with_subtitle=None, status_without_subtitle=None,
                  item_date_with_subtitle=None, item_date_without_subtitle=None):
         super().__init__(title, item_format, status_with_subtitle, status_without_subtitle, item_date_with_subtitle,
@@ -106,6 +109,7 @@ class DurhamBookAndCDHoldRule(DurhamParseRule):
         - branch_without_subtitle: the index of the library item's pickup branch location if the subtitle isn't included
             in the item's data
     """
+
     def __init__(self, title, item_format, contributors_with_subtitle=None, contributors_without_subtitle=None,
                  status_with_subtitle=None, status_without_subtitle=None,
                  item_date_with_subtitle=None, item_date_without_subtitle=None, branch_with_subtitle=None,
@@ -138,6 +142,7 @@ class DurhamBookAndCDCheckoutRule(DurhamParseRule):
         - item_date_without_subtitle: the index of the library item's return date if the subtitle isn't included
             in the item's data
     """
+
     def __init__(self, title, item_format, contributors_with_subtitle=None, contributors_without_subtitle=None,
                  status_with_subtitle=None, status_without_subtitle=None,
                  item_date_with_subtitle=None, item_date_without_subtitle=None):
@@ -158,6 +163,7 @@ class TorontoParseRule:
         - status: the index of the library item's pickup/return status
         - item_date: the index of the library item's pickup/return date
     """
+
     def __init__(self, title, item_format, contributors, status, item_date):
         self.title = title
         self.item_format = item_format
@@ -177,6 +183,7 @@ class TorontoCheckoutParseRule(TorontoParseRule):
         - status: the index of the library item's return status
         - item_date: the index of the library item's return date
     """
+
     def __init__(self, title, item_format, contributors, status, item_date):
         super().__init__(title, item_format, contributors, status, item_date)
 
@@ -193,6 +200,7 @@ class TorontoHoldParseRule(TorontoParseRule):
         - item_date: the index of the library item's pickup date
         - branch: the index of the pickup location for a library item
     """
+
     def __init__(self, title, item_format, contributors, item_date, branch):
         super().__init__(title, item_format, contributors, None, item_date)
         self.branch = branch

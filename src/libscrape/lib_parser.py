@@ -14,6 +14,7 @@ class LibraryParser(ABC):
     Attributes:
      - parse_rule: the rules this parser will use to process data scraped from a libraries website
     """
+
     def __init__(self, parse_rule):
         self.parse_rule = parse_rule
 
@@ -37,6 +38,7 @@ class DurhamParser(LibraryParser):
     Attributes:
       - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -138,6 +140,7 @@ class DurhamHoldParser(DurhamParser):
     Attributes:
       - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -159,9 +162,9 @@ class DurhamHoldParser(DurhamParser):
         if not item_format:
             item_format = DurhamHoldParser.format(data_to_parse)
         if item_format == "DVD":
-            return not (data_to_parse[3][:2] == 'by') and not (data_to_parse[3][:6] == 'DVD - ')
+            return not (data_to_parse[4][:2] == 'by') and not (data_to_parse[4][:6] == 'DVD - ')
         elif item_format == "CD" or item_format == "Book":
-            return not (data_to_parse[3][:2] == 'by')
+            return not (data_to_parse[4][:2] == 'by')
 
     def status(self, data_to_parse, has_subtitle=None):
         """
@@ -279,6 +282,7 @@ class DurhamCheckoutParser(DurhamParser):
     Attributes:
       - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -402,6 +406,7 @@ class TorontoParser(LibraryParser):
     Attributes:
         - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -473,6 +478,7 @@ class TorontoHoldParser(TorontoParser):
     Attributes:
       - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 
@@ -516,6 +522,7 @@ class TorontoCheckoutParser(TorontoParser):
     Attributes:
       - parse_rule: the rules this parser will use to
     """
+
     def __init__(self, parse_rule):
         super().__init__(parse_rule)
 

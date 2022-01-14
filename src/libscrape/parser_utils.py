@@ -28,8 +28,8 @@ def save_output_as_html(contents, title):
 
 def save_output_as_txt(contents, title):
     """
-    Saves the contents to a plain text file (*.txt) with the given title. The current date will be appended to the title
-     in the format Month-Day-Year.
+    Saves the contents to a plain text file (*.txt) with the given title. The current date will be appended to the
+    title in the format Month-Day-Year.
 
     Parameters
     ----------
