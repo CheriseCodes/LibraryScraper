@@ -11,7 +11,7 @@ def tpl_with_google_doc_text_message(phone_number, username, password):
     driver = webdriver.Chrome(options=options)
     tpl = TPL(driver)
     messenger = Messenger(tpl.name)
-    messenger.send_checkouts_text(phone_number, tpl.items_checked_out(username, password))
+    messenger.send_checkouts_text(phone_number, tpl.items_checked_out(username, password), "plain")
 
 def tpl_without_text_message(phone_number, username, password):
     options = webdriver.ChromeOptions()
@@ -19,7 +19,7 @@ def tpl_without_text_message(phone_number, username, password):
     driver = webdriver.Chrome(options=options)
     tpl = TPL(driver)
     messenger = Messenger(tpl.name)
-    messenger.send_checkouts_text(phone_number, tpl.items_checked_out(username, password))
+    messenger.send_checkouts_text(phone_number, tpl.items_checked_out(username, password), "doc")
 
 
 if __name__ == "__main__":
@@ -27,4 +27,4 @@ if __name__ == "__main__":
     username = "my_username"
     password = "my_password"
     tpl_with_google_doc_text_message(receiving_phone_number, username, password)
-    tpl_without_text_message(username, password)
+    tpl_without_text_message(receiving_phone_number, username, password)
