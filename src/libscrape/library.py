@@ -540,19 +540,20 @@ class TPL:
 
     @staticmethod
     def parse_hold_data(hold_data):
-        parser = TorontoHoldParser(TorontoHoldParseRule(title=0, item_format=2, contributors=1, status=5, item_date=3))
+        parser = TorontoHoldParser(TorontoHoldParseRule(title=2, item_format=4, contributors=3, item_date=7, branch=5))
         title, item_format, contributors, item_date, status, branch = parser.all(hold_data)
+        print("in library.py:",title, item_format, contributors, item_date, status, branch)
         return Item(date_retrieved=date.today(), title=title, contributors=contributors, item_format=item_format,
                     is_hold=True, item_date=item_date, status=status, branch=branch, system='toronto')
 
     @staticmethod
     def parse_checkout_data(checkout_data):
         parser = TorontoCheckoutParser(
-            TorontoCheckoutParseRule(title=0, item_format=2, contributors=1, status=4, item_date=-2))
+            TorontoCheckoutParseRule(title=1, item_format=5, contributors=4, status=8, item_date=7))
         title, item_format, contributors, item_date, status = parser.all(checkout_data)
         # print(title, item_format, contributors, item_date, status)
         return Item(date_retrieved=date.today(), title=title, contributors=contributors, item_format=item_format,
-                    is_hold=False, item_date=item_date, status=status, branch='', system='toronto')
+                    is_hold=False, item_date=item_date, status=status, system='toronto')
 
     @staticmethod
     def create_item_object(date_retrieved, is_hold, data):
@@ -642,6 +643,7 @@ class TPL:
         Item[]
         """
         res = []
+   
         holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
         self.login(username, password, url=holds_url)
 
@@ -649,12 +651,12 @@ class TPL:
             EC.visibility_of_all_elements_located(
                 (By.CSS_SELECTOR, "#PageContent > div.holds-redux"))
         )
-
-        hold_data = self.hold_data(self.driver.page_source)
+        hold_data = TPL.hold_data(self.driver.page_source)
+        #print(hold_data)
         res = []
         if hold_data:
             for lines in hold_data:
-                hold_item = self.parse_hold_data(lines)
+                hold_item = TPL.parse_hold_data(lines)
                 res.append(hold_item)
         return res
 

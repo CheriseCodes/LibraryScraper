@@ -46,16 +46,17 @@ class Item:
         self.system = system
         if self.system == 'toronto':
             contrib_lst = contributors.rsplit(',', 1)
-            contributors = contrib_lst[0]
+            if contrib_lst[-1] == ' author.':
+                contributors = contrib_lst[0]
             self.contributors = 'by ' + contributors
         else:
             self.contributors = contributors
 
     def __eq__(self, __o: object) -> bool:
-        return (__o.title == self.title) and (__o.item_format == self.item_format) and (
-                    __o.is_hold == self.is_hold) and (__o.status == self.status) and (
-                           __o.item_date == self.item_date) and (__o.branch == self.branch) and (
-                           __o.system == self.system) and (__o.contributors == self.contributors)
+        return (__o.title == self.title) and (__o.item_format == self.item_format) and \
+                    (__o.is_hold == self.is_hold) and (__o.status == self.status) and \
+                           (__o.item_date == self.item_date) and (__o.branch == self.branch) and \
+                           (__o.system == self.system) and (__o.contributors == self.contributors)
 
     def __str__(self):
         return f"Item(date_retrieved={self.date_retrieved},title={self.title},contributors={self.contributors}," \

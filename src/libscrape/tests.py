@@ -312,6 +312,30 @@ class Library(unittest.TestCase):
             # print(exp_items[i] == hold_items[i])
             self.assertTrue(hold_items[i] == exp_items[i])
 
+    def test_toronto_parses_hold_data_into_item(self):
+        # TODO: Correct indexes for TPL
+        hold_data=[' ', ' ', 'Modern Java in action : lambda, streams, functional and reactive programming',
+                    'Urma, Raoul-Gabriel, author.', 'Book', 'North York Central Library', 'Pick up by', 'Thu 6 Jan',
+                    '(', '7 Days Left', ')', 'Cancel']
+        exp_item = Item(date_retrieved="2022-01-13", title="Modern Java in action : lambda, streams, functional and reactive programming", contributors="Urma, Raoul-Gabriel", item_format="Book",
+                 is_hold=True, status="Ready", item_date="Thu 6 Jan", branch="North York Central Library",
+                 system="toronto")
+        
+        hold_item = TPL.parse_hold_data(hold_data)
+        #print("hold_item:", hold_item)
+        #print("exp_item:", exp_item)
+        self.assertTrue(exp_item == hold_item)
+
+    def test_toronto_parses_checkout_data_into_item(self):
+        checkout_data = [' ', 'Programming AWS lambda : build and deploy serverless applications with Java', ' ',
+                    'Programming AWS lambda : build and deploy serverless applications with Java',
+                    'Chapin, John, author.', 'Book', '37131 201 530 110', 'Mon 24 Jan', '1', 'Renew']
+        checkout_item = TPL.parse_checkout_data(checkout_data)
+        exp_item = Item(date_retrieved="2022-01-13", title='Programming AWS lambda : build and deploy serverless applications with Java', contributors="Chapin, John", item_format="Book",
+                 is_hold=False, status="Due Later", item_date="Mon 24 Jan", system="toronto")
+        #print("exp_item:",exp_item)
+        #print("checkout_item:",checkout_item)
+        self.assertTrue(exp_item == checkout_item)
     def test_wpl_scrapes_hours_given_branch(self):
         branch = "Central"
         f = open(curr_path + "/sample_pages/wpl-hours-Jan-13-2022.html", "r")

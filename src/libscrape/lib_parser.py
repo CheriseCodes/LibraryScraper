@@ -539,11 +539,11 @@ class TorontoCheckoutParser(TorontoParser):
         -------
         A string representing the return date fot this library item
         """
-        res = re.search('(?i)renew', data_to_parse[-1])
-        if res:
-            return data_to_parse[self.parse_rule.item_date - 2]
-        else:
-            return data_to_parse[self.parse_rule.item_date]
+        #res = re.search('(?i)renew', data_to_parse[-1])
+        #if res:
+        #    return data_to_parse[self.parse_rule.item_date - 2]
+        #else:
+        return data_to_parse[self.parse_rule.item_date]
 
     def status(self, data_to_parse):
         """

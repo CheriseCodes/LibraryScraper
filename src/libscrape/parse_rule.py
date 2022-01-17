@@ -202,5 +202,5 @@ class TorontoHoldParseRule(TorontoParseRule):
     """
 
     def __init__(self, title, item_format, contributors, item_date, branch):
-        super().__init__(title, item_format, contributors, None, item_date)
+        super().__init__(title=title, item_format=item_format, contributors=contributors, status=None, item_date=item_date)
         self.branch = branch
