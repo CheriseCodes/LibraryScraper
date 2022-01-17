@@ -50,7 +50,7 @@ class Library(unittest.TestCase):
                  status='Not Ready', branch='Central Library', system='durham')]
 
         self.mock_toronto_checkouts = [Item(date_retrieved="2022-01-13",
-                                            title='Test-driven development with React : apply test-driven development' \
+                                            title='Test-driven development with React : apply test-driven development'
                                                   + ' in your applications', contributors='by Qiu, Juntao',
                                             item_format='Book', is_hold=False, item_date='Yesterday',
                                             status='Overdue', branch='', system='toronto'),
@@ -258,7 +258,7 @@ class Library(unittest.TestCase):
         f.close()
         exp_res = [[' ',
                     'The bully-proof workplace : essential strategies, tips, and scripts for dealing with the office'
-                    + ' sociopath',' ',
+                    + ' sociopath', ' ',
                     'The bully-proof workplace : essential strategies, tips, and scripts for dealing with the office'
                     + ' sociopath',
                     'Dean, Peter J., 1946- author.', 'Book', '37131 187 370 002', 'Tue 11 Jan', '0', 'Renew'],
@@ -314,28 +314,33 @@ class Library(unittest.TestCase):
 
     def test_toronto_parses_hold_data_into_item(self):
         # TODO: Correct indexes for TPL
-        hold_data=[' ', ' ', 'Modern Java in action : lambda, streams, functional and reactive programming',
-                    'Urma, Raoul-Gabriel, author.', 'Book', 'North York Central Library', 'Pick up by', 'Thu 6 Jan',
-                    '(', '7 Days Left', ')', 'Cancel']
-        exp_item = Item(date_retrieved="2022-01-13", title="Modern Java in action : lambda, streams, functional and reactive programming", contributors="Urma, Raoul-Gabriel", item_format="Book",
-                 is_hold=True, status="Ready", item_date="Thu 6 Jan", branch="North York Central Library",
-                 system="toronto")
-        
+        hold_data = [' ', ' ', 'Modern Java in action : lambda, streams, functional and reactive programming',
+                     'Urma, Raoul-Gabriel, author.', 'Book', 'North York Central Library', 'Pick up by', 'Thu 6 Jan',
+                     '(', '7 Days Left', ')', 'Cancel']
+        exp_item = Item(date_retrieved="2022-01-13",
+                        title="Modern Java in action : lambda, streams, functional and reactive programming",
+                        contributors="Urma, Raoul-Gabriel", item_format="Book",
+                        is_hold=True, status="Ready", item_date="Thu 6 Jan", branch="North York Central Library",
+                        system="toronto")
+
         hold_item = TPL.parse_hold_data(hold_data)
-        #print("hold_item:", hold_item)
-        #print("exp_item:", exp_item)
+        # print("hold_item:", hold_item)
+        # print("exp_item:", exp_item)
         self.assertTrue(exp_item == hold_item)
 
     def test_toronto_parses_checkout_data_into_item(self):
         checkout_data = [' ', 'Programming AWS lambda : build and deploy serverless applications with Java', ' ',
-                    'Programming AWS lambda : build and deploy serverless applications with Java',
-                    'Chapin, John, author.', 'Book', '37131 201 530 110', 'Mon 24 Jan', '1', 'Renew']
+                         'Programming AWS lambda : build and deploy serverless applications with Java',
+                         'Chapin, John, author.', 'Book', '37131 201 530 110', 'Mon 24 Jan', '1', 'Renew']
         checkout_item = TPL.parse_checkout_data(checkout_data)
-        exp_item = Item(date_retrieved="2022-01-13", title='Programming AWS lambda : build and deploy serverless applications with Java', contributors="Chapin, John", item_format="Book",
-                 is_hold=False, status="Due Later", item_date="Mon 24 Jan", system="toronto")
-        #print("exp_item:",exp_item)
-        #print("checkout_item:",checkout_item)
+        exp_item = Item(date_retrieved="2022-01-13",
+                        title='Programming AWS lambda : build and deploy serverless applications with Java',
+                        contributors="Chapin, John", item_format="Book",
+                        is_hold=False, status="Due Later", item_date="Mon 24 Jan", system="toronto")
+        # print("exp_item:",exp_item)
+        # print("checkout_item:",checkout_item)
         self.assertTrue(exp_item == checkout_item)
+
     def test_wpl_scrapes_hours_given_branch(self):
         branch = "Central"
         f = open(curr_path + "/sample_pages/wpl-hours-Jan-13-2022.html", "r")
@@ -365,8 +370,8 @@ class Library(unittest.TestCase):
         hours = PPL._hours(page_source, full_branch_name)
         f.close()
         exp_hours = "Central Library Hours\n\nOpen today until 9:00pm\n\nMonday \n9:30AM - 9:00PM\n\nTuesday " \
-                    + "\n9:30AM - 9:00PM\n\nWednesday \n9:30AM - 9:00PM\n\nThursday \n9:30AM - 9:00PM\n\nFriday "\
-                      + "\n9:30AM - 9:00PM\n\nSaturday \n9:30AM - 4:30PM\n\nSunday \nClosed\n\n\n"
+                    + "\n9:30AM - 9:00PM\n\nWednesday \n9:30AM - 9:00PM\n\nThursday \n9:30AM - 9:00PM\n\nFriday " \
+                    + "\n9:30AM - 9:00PM\n\nSaturday \n9:30AM - 4:30PM\n\nSunday \nClosed\n\n\n"
         exp_hours = [x.strip() for x in exp_hours.split('\n')]
         hours = [y.strip() for y in hours.split('\n')]
         # print(hours)
@@ -427,7 +432,7 @@ class Library(unittest.TestCase):
         # checkouts = library_obj.items_checked_out(self.login_info['p'][0], self.login_info['p'][1])
         messenger = Messenger("Pickering Public Library")
         text = messenger.formulate_checkouts_text(self.mock_durham_checkouts, "plain")
-        exp_text = """Pickering Public Library CHECKOUTS (2022-01-13):
+        exp_text = f"""Pickering Public Library CHECKOUTS ({date.today()}):
         1. Bach (Music CD) by Grimaud, Hélène | Due Later | Oct. 20, 2021
         2. Nature (DVD)  | Due Later | Oct. 20, 2021
         3. The Defining Decade (Book) by Jay, Meg | Due Later | Nov. 03, 2021
