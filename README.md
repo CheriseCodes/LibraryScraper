@@ -10,7 +10,7 @@ python3 -m pip install -r requirements.txt
 
 ## Usage
 
-An example of how to use this program with the Toronto Public Library System can be found in src/libscrape/examples
+An example of how to use this program with the Toronto Public Library System can be found in src/libscrape/tpl-example.py
 
 ## Compatible Library Systems
 
