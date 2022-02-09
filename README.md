@@ -4,7 +4,7 @@ A web scraper that scrapes public library systems for the given user's holds and
 
 **In progress:**
 - [ ] Make features accessible through a Django REST api
-- [x] Crawl books from each library system and store the results in a database which can then be accessed through the api (see src/tpl_crawler)
+- [x] Crawl books and store the results in a database
 
 ## Installation
 
