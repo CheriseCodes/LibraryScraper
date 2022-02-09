@@ -3,7 +3,7 @@
 Crawls all results from a search query on torontopubliclibrary.ca and retrieves the title, contributors, and branches each result is available at.
 
 **In progress:**
-- [ ] Store results in a database
+- [x] Store results in a database
 - [ ] Make results accessible through an API
 
 ## Usage

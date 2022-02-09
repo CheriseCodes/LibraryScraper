@@ -1,24 +1,25 @@
 import scrapy
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Spider
 import re
 
-class TplSpider(CrawlSpider):
-    # TODO: Copy this pagination pattern: https://docs.scrapy.org/en/latest/intro/tutorial.html?highlight=pagination#more-examples-and-patterns
+class TplSpider(Spider):
     name = 'tpl'
-    allowed_domains = ['torontopubliclibrary.ca']
     start_urls = ['https://www.torontopubliclibrary.ca/search.jsp?N=37918+4294952073+37844+20206+37751&Ntt=Python+(Computer+program+language)']
-    custom_settings = {
-        'DEPTH_LIMIT': '1',
-    }
-    rules = [Rule(LinkExtractor(allow=r'https:\/\/www\.torontopubliclibrary\.ca\/detail\.jsp\?Entt='), callback='parse_info', follow=True)]
-    def parse_info(self, response):
-        #print(response.text)
+    def parse(self, response):
+        book_page_links = response.css('.record-result div.title.align-top > a')
+        #print("Book page links:", book_page_links)
+        yield from response.follow_all(book_page_links, self.parse_book)
+        next_page_link = response.css('.pagination-next > a')
+        yield from response.follow_all(next_page_link, self.parse)
+
+    def parse_book(self, response):
+        #print(response.title)
         title = response.xpath('//*[@id="bib-detail"]/div[1]/div[2]/div[1]/h1/text()').get()
         contributors = response.xpath('//*[@id="bib-detail"]/div[1]/div[2]/div[3]/a/text()').get()
         branches = response.css('#item-availability tr td > b > a::text').getall()
         branches = [re.sub('\s+', ' ', branch).strip() for branch in branches if (('Closed' not in branch) and ('Toronto Public Library' not in branch))]
         page_url = response.url
+        #print(title)
         yield {
             "title": title.strip(),
             "url": page_url,
