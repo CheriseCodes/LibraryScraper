@@ -13,3 +13,5 @@ secret/
 sample_pages/
 txt_logs/
 TODO.md
+*.db
+
