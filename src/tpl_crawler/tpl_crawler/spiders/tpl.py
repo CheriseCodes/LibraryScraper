@@ -13,11 +13,10 @@ class TplSpider(Spider):
         yield from response.follow_all(next_page_link, self.parse)
 
     def parse_book(self, response):
-        #print(response.title)
         title = response.xpath('//*[@id="bib-detail"]/div[1]/div[2]/div[1]/h1/text()').get()
         contributors = response.xpath('//*[@id="bib-detail"]/div[1]/div[2]/div[3]/a/text()').get()
         branches = response.css('#item-availability tr td > b > a::text').getall()
-        branches = [re.sub('\s+', ' ', branch).strip() for branch in branches if (('Closed' not in branch) and ('Toronto Public Library' not in branch))]
+        branches = ','.join([re.sub('\s+', ' ', branch).strip() for branch in branches if (('Closed' not in branch) and ('Toronto Public Library' not in branch))])
         page_url = response.url
         #print(title)
         yield {
