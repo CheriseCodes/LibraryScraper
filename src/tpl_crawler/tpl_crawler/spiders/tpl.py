@@ -2,9 +2,10 @@ import scrapy
 from scrapy.spiders import Spider
 import re
 
+query = '?N=37918+4294952073+37844+20206+37751&Ntt=Python+(Computer+program+language)'
 class TplSpider(Spider):
     name = 'tpl'
-    start_urls = ['https://www.torontopubliclibrary.ca/search.jsp?N=37918+4294952073+37844+20206+37751&Ntt=Python+(Computer+program+language)']
+    start_urls = ['https://www.torontopubliclibrary.ca/search.jsp'+ query]
     def parse(self, response):
         book_page_links = response.css('.record-result div.title.align-top > a')
         #print("Book page links:", book_page_links)
@@ -23,5 +24,6 @@ class TplSpider(Spider):
             "title": title.strip(),
             "url": page_url,
             "contributors": contributors,
-            "branches": branches
+            "query": query,
+            "branches": branches,
         }
