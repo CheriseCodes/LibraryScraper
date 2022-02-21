@@ -1,10 +1,6 @@
 # LibraryScraper
 
-A web scraper that scrapes public library systems for the given user's holds and checkouts. If needed, a text message can be sent (in plain text or a Google Doc) that informs the user of updates to the status of their library items.
-
-**In progress:**
-- [x] Make features accessible through a Django REST api
-- [x] Crawl books and store the results in a database
+A web scraper that scrapes public library systems for the given user's holds and checkouts. If needed, a text message can be sent (in plain text or a Google Doc) that informs the user of updates to the status of their library items. Now includes a webcrawler that saves the results of a specified TPL query in a database using a custom Django REST API.
 
 ## Installation
 

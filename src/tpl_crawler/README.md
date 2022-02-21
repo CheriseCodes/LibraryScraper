@@ -1,10 +1,6 @@
 # TPL Crawler
 
-Crawls all results from a search query on torontopubliclibrary.ca and retrieves the title, contributors, and branches each result is available at.
-
-**In progress:**
-- [x] Store results in a database
-- [ ] Make results accessible through an API
+Crawls all results from a search query on torontopubliclibrary.ca and retrieves the title, contributors, and branches each result is available at. Saves the results in a SQLite database by using a custome Django REST API.
 
 ## Usage
 
