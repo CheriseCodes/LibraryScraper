@@ -2,7 +2,7 @@ import scrapy
 from scrapy.spiders import Spider
 import re
 
-query = '?N=37918+4294952073+37844+20206+37751&Ntt=Python+(Computer+program+language)'
+query = '?N=37918+4294952073+37844+20206+37751&Ntt=Java+(Computer+program+language)'
 class TplSpider(Spider):
     name = 'tpl'
     start_urls = ['https://www.torontopubliclibrary.ca/search.jsp'+ query]
