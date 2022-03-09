@@ -18,6 +18,7 @@ class TplSpider(Spider):
         contributors = response.xpath('//*[@id="bib-detail"]/div[1]/div[2]/div[3]/a/text()').get()
         branches = response.css('#item-availability tr td > b > a::text').getall()
         branches = ','.join([re.sub('\s+', ' ', branch).strip() for branch in branches if (('Closed' not in branch) and ('Toronto Public Library' not in branch))])
+        # TODO: save publication_year
         page_url = response.url
         #print(title)
         yield {

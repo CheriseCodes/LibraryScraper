@@ -18,12 +18,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-from lib_parser import *
-from parse_rule import *
+from .lib_parser import *
+from .parse_rule import *
 
-from parser_utils import *
+from .parser_utils import *
 from datetime import date
-from lib_assets import *
+from .lib_assets import *
 
 
 class DurhamLibrary:
@@ -648,8 +648,8 @@ class TPL:
         self.login(username, password, url=holds_url)
 
         WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_all_elements_located(
-                (By.CSS_SELECTOR, "#PageContent > div.holds-redux"))
+            EC.visibility_of_any_elements_located(
+                (By.CSS_SELECTOR, "#PageContent > div.holds-redux.ready-for-pickup"))
         )
         hold_data = TPL.hold_data(self.driver.page_source)
         #print(hold_data)
@@ -755,6 +755,10 @@ class TPL:
             The url which the login credentials will be applied to
         """
         self.driver.get(url)
+        WebDriverWait(driver=self.driver, timeout=10).until(
+            EC.visibility_of_all_elements_located(
+                (By.ID, "form_signin"))
+        )
         user_login = self.driver.find_element_by_id("userID")
         pass_login = self.driver.find_element_by_id("password")
         submit_login = self.driver.find_element_by_css_selector("#form_signin > div > button")

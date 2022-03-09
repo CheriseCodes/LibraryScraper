@@ -17,6 +17,7 @@ class TplCrawlerPipeline:
         api_url = "http://127.0.0.1:8000/books/"
         username = "cherise"
         password = os.environ['TPL_API_PASS']
+        # TODO: Save URL in the database
         book = {'title':item['title'], 'contributors':item['contributors'], 'branches':str(item['branches']), 'query':item['query']}
         response = requests.post(api_url,json=book, auth=HTTPBasicAuth(username, password))
         print(response.json())
