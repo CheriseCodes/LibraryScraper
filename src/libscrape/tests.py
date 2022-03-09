@@ -96,10 +96,13 @@ class Library(unittest.TestCase):
     def save_current_tpl_holds_page(self):
         driver = self.create_webdriver()
         library_obj = TPL(driver)
+        print("created lib object")
         library_obj.login(self.login_info['t'][0], self.login_info['t'][1],
                           url="https://https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds")
         sleep(3)
+        print("logged in")
         save_output_as_html(library_obj.driver.page_source, "tpl-holds")
+        print("saved html")
         driver.close()
 
     def save_current_wpl_holds_page(self):

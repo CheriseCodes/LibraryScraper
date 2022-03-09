@@ -1,7 +1,8 @@
 __pycache__
 __init__.py
 *.pyc
-env
+env/
+.env
 *~
 personal_notes/
 credentials.json

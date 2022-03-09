@@ -18,12 +18,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 
-from .lib_parser import *
-from .parse_rule import *
+from lib_parser import *
+from parse_rule import *
 
-from .parser_utils import *
+from parser_utils import *
 from datetime import date
-from .lib_assets import *
+from lib_assets import *
 
 
 class DurhamLibrary:
@@ -144,6 +144,7 @@ class PPL(DurhamLibrary):
     def __init__(self, driver=None):
         super().__init__()
         self.driver = driver
+        self.name = "Pickering Public Library"
 
     @staticmethod
     def hold_data(page_source):
@@ -335,10 +336,11 @@ class WPL(DurhamLibrary):
     Attributes:
         - driver: an instance of a Selenium Chrome web driver
     """
-
+    
     def __init__(self, driver=None):
         super().__init__()
         self.driver = driver
+        self.name = "Whitby Public Library"
 
     @staticmethod
     def checkout_data(page_source):
