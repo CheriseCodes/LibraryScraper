@@ -273,7 +273,7 @@ class Messenger:
         message = client.messages \
             .create(
             body=res,
-            from_=os.environ['TWILIO_FROM'],
+            from_=os.environ['PHONE_FROM'],
             to=phone_number
         )
         return message
@@ -300,7 +300,7 @@ class Messenger:
         res = self.formulate_holds_text(data, text_type)
         message = client.messages.create(
             body=res,
-            from_=os.environ['TWILIO_FROM'],
+            from_=os.environ['PHONE_FROM'],
             to=phone_number
         )
         return message

@@ -647,7 +647,7 @@ class TPL:
         res = []
    
         holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
-        self.login(username, password, url=holds_url)
+        self.login(username, password, url=holds_url, expected_title='Holds : Toronto Public Library')
 
         WebDriverWait(driver=self.driver, timeout=10).until(
             EC.visibility_of_any_elements_located(
@@ -678,7 +678,7 @@ class TPL:
         """
         res = []
         checkout_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts"
-        self.login(username, password, url=checkout_url)
+        self.login(username, password, url=checkout_url, expected_title='Checkouts : Toronto Public Library')
 
         WebDriverWait(driver=self.driver, timeout=10).until(
             EC.visibility_of_all_elements_located((By.CLASS_NAME, "item-wrapper"))
@@ -743,7 +743,7 @@ class TPL:
         page_source = self.driver.page_source
         return self._hours(branch, page_source)
 
-    def login(self, username, password, url='https://account.torontopubliclibrary.ca/login'):
+    def login(self, username, password, url='https://account.torontopubliclibrary.ca/login', expected_title=None):
         """
         Applies login credentials to the url given
 
@@ -756,11 +756,12 @@ class TPL:
         url: str
             The url which the login credentials will be applied to
         """
+        
+
         self.driver.get(url)
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_all_elements_located(
-                (By.ID, "form_signin"))
-        )
+        if expected_title:
+            if expected_title == self.driver.title:
+                return
         user_login = self.driver.find_element_by_id("userID")
         pass_login = self.driver.find_element_by_id("password")
         submit_login = self.driver.find_element_by_css_selector("#form_signin > div > button")
