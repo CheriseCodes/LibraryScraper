@@ -7,12 +7,12 @@
 
 ## Installation
 
-## Option 1: Docker
+### Option 1: Docker
 ```bash
 docker build --tag libscrape
 ```
 
-## Option 2: On disk (Unix/Linux)
+### Option 2: On disk (Unix/Linux)
 1. Install [Chrome WebDriver](https://chromedriver.chromium.org/downloads)
 2. Install [Python](https://www.python.org/downloads/)
 3. [Create a virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
