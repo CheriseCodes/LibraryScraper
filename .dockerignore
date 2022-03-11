@@ -1,0 +1,5 @@
+*.md
+secret/
+personal_notes/
+env/
+.idea/

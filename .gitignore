@@ -16,4 +16,3 @@ txt_logs/
 TODO.md
 *.db
 db.sqlite3
-src/libscrape/main.py

@@ -1,15 +1,36 @@
 # LibraryScraper
 
-A web scraper that scrapes public library systems for the given user's holds and checkouts. If needed, a text message can be sent (in plain text or a Google Doc) that informs the user of updates to the status of their library items. Now includes a Scrapy web crawler that saves the results of a specified TPL query in a database using a custom Django REST API.
+## Features
+* Automatically retreive your holds and checkouts
+* Send a SMS message status updates in plain text or a Google Doc
+* Save results of a TPL query in a database for future reference
 
 ## Installation
 
+## Option 1: Docker
 ```bash
-python3 -m pip install -r requirements.txt
+docker build --tag libscrape
 ```
 
-## Usage
+## Option 2: On disk (Unix/Linux)
+1. Install [Chrome WebDriver](https://chromedriver.chromium.org/downloads)
+2. Install [Python](https://www.python.org/downloads/)
+3. [Create a virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
+4. Install dependencies from requirements.txt
 
+## Usage
+1. Configure an appropriate .env file in src/libscrape
+2. Edit src/libscrape/main.py to meet your needs
+3. Run one of the following commands:
+### Option 1: Docker
+```bash
+docker run libscrape
+```
+### Option 2: On Disk (Unix/Linux)
+```bash
+./send_messages.sh
+```
+## Sample Code
 An example of how to use this program with the Toronto Public Library System can be found in src/libscrape/tpl-example.py
 
 ## Compatible Library Systems
