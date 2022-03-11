@@ -2,7 +2,7 @@
 
 ## Features
 * Automatically retreive your holds and checkouts
-* Send a SMS message status updates in plain text or a Google Doc
+* Send SMS library status updates in plain text or a Google Doc
 * Save results of a TPL query in a database for future reference
 
 ## Installation
