@@ -1,4 +1,4 @@
-# LibraryScraper
+# Library Scraper
 
 ## Features
 * Automatically retreive your holds and checkouts
