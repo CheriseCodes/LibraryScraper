@@ -5,7 +5,7 @@ env/
 .env
 *~
 personal_notes/
-credentials.json
+credentials*.json
 token.json
 mock.txt
 secret/
