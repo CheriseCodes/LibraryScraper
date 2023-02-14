@@ -7,7 +7,7 @@ certifi==2021.5.30
 cffi==1.15.0
 charset-normalizer==2.0.6
 constantly==15.1.0
-cryptography==36.0.1
+cryptography==39.0.1
 cssselect==1.1.0
 Django==4.0.9
 djangorestframework==3.13.1
