@@ -9,7 +9,7 @@
 
 ### Option 1: Docker
 ```bash
-docker build --tag libscrape
+docker build --tag libscrape .
 ```
 
 ### Option 2: On disk (Unix/Linux)
