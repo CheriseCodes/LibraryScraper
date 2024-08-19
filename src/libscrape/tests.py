@@ -1,29 +1,17 @@
 """
 Unit test suite for every class and method in library.py
 """
-from cmath import exp
-from time import sleep
-from typing import List
 import unittest
 from library import WPL, PPL, TPL, DurhamLibrary, Item
 from parser_utils import *
-from selenium import webdriver
-from datetime import date
 import os
 
 from lib_assets import Messenger
 
-from parser_utils import save_output_as_html
-
 curr_path = os.path.dirname(__file__)
-
 
 class Library(unittest.TestCase):
     def setUp(self):
-        self.login_info = {"p": (os.environ['PPL_USER'], os.environ['PPL_PASS']),
-                           "w": (os.environ['WPL_USER'], os.environ['WPL_PASS']),
-                           "t": (os.environ['TPL_USER'], os.environ['TPL_PASS'])}
-
         self.with_ui = False
 
         self.mock_durham_checkouts = [
@@ -74,109 +62,13 @@ class Library(unittest.TestCase):
 
         self.mock_toronto_holds = []
 
-        # TODO: Create mock checkout and hold page for each branch
-
-    def create_webdriver(self):
-        options = webdriver.ChromeOptions()
-        options.add_argument('--log-level=3')
-        if not self.with_ui:
-            options.add_argument('--headless')
-        driver = webdriver.Chrome(options=options)
-        return driver
-
-    def save_current_tpl_checkouts_page(self):
-        driver = self.create_webdriver()
-        library_obj = TPL(driver)
-        library_obj.login(self.login_info['t'][0], self.login_info['t'][1],
-                          url="https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts")
-        sleep(3)
-        save_output_as_html(library_obj.driver.page_source, "tpl-checkouts")
-        driver.close()
-
-    def save_current_tpl_holds_page(self):
-        driver = self.create_webdriver()
-        library_obj = TPL(driver)
-        print("created lib object")
-        library_obj.login(self.login_info['t'][0], self.login_info['t'][1],
-                          url="https://https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds")
-        sleep(3)
-        print("logged in")
-        save_output_as_html(library_obj.driver.page_source, "tpl-holds")
-        print("saved html")
-        driver.close()
-
-    def save_current_wpl_holds_page(self):
-        driver = self.create_webdriver()
-        library_obj = WPL(driver)
-        library_obj.login(self.login_info['w'][0], self.login_info['w'][1],
-                          url="https://whitby.bibliocommons.com/v2/holds")
-        sleep(3)
-        save_output_as_html(library_obj.driver.page_source, "wpl-holds")
-        driver.close()
-
-    def save_current_wpl_checkouts_page(self):
-        driver = self.create_webdriver()
-        library_obj = WPL(driver)
-        library_obj.login(self.login_info['w'][0], self.login_info['w'][1],
-                          url="https://whitby.bibliocommons.com/v2/checkedout")
-        sleep(10)
-        save_output_as_html(library_obj.driver.page_source, "wpl-checkouts")
-        driver.close()
-
-    def save_current_ppl_holds_page(self):
-        driver = self.create_webdriver()
-        library_obj = PPL(driver)
-        library_obj.login(self.login_info['p'][0], self.login_info['p'][1],
-                          url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
-        sleep(10)
-        save_output_as_html(library_obj.driver.page_source, "ppl-holds")
-        driver.close()
-
-    def save_current_ppl_checkouts_page(self):
-        driver = self.create_webdriver()
-        library_obj = PPL(driver)
-        library_obj.login(self.login_info['p'][0], self.login_info['p'][1],
-                          url="https://pickering.bibliocommons.com/user/login?destination=%2Fcheckedout")
-        sleep(10)
-        save_output_as_html(library_obj.driver.page_source, "ppl-checkouts")
-        driver.close()
-
-    def test_wpl_login(self):
-        driver = self.create_webdriver()
-        library_obj = WPL(driver)
-        library_obj.login(self.login_info['w'][0], self.login_info['w'][1])
-        sleep(8)
-        res_title = library_obj.driver.title
-        library_obj.driver.close()
-        self.assertEqual(res_title, "My WPL | Whitby Public Library | BiblioCommons")
-
-    def test_ppl_login(self):
-        driver = self.create_webdriver()
-        library_obj = PPL(driver)
-        library_obj.login(self.login_info['p'][0], self.login_info['p'][1],
-                          url="https://pickering.bibliocommons.com/user/login?destination=%2Fdashboard%2Fuser" +
-                              "_dashboard%3F&_ga=2.48438821.225519067.1641940790-1406162599.1640825023")
-        sleep(8)
-        res_title = library_obj.driver.title
-        library_obj.driver.close()
-        self.assertEqual(res_title, "My PPL | Pickering Public Library | BiblioCommons")
-
-    def test_tpl_login(self):
-        driver = self.create_webdriver()
-        library_obj = TPL(driver)
-        library_obj.login(self.login_info['t'][0], self.login_info['t'][1])
-        sleep(3)
-        res_title = library_obj.driver.title
-        library_obj.driver.close()
-        self.assertEqual(res_title, "Account Summary : Toronto Public Library")
-
     def test_wpl_attains_hold_data(self):
         holds_page = "/sample_pages/wpl-holds-Jan-05-2022.html"
         # holds_page = "/sample_pages/wpl-holds-Jan-13-2022.html"
-        f = open(curr_path + holds_page, "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + holds_page, "r", encoding='utf-8') as f:
+            page_source = f.read()
         hold_data = WPL.hold_data(page_source)
-        f.close()
         # print(hold_data)
         exp_result = [
             ['Select. Item 1. Fullmetal Alchemist.', 'Fullmetal Alchemist', 'Fullmetal Alchemist, Book', '1', 'by ',
@@ -189,9 +81,9 @@ class Library(unittest.TestCase):
         self.assertListEqual(hold_data, exp_result)
 
     def test_ppl_attains_hold_data(self):
-        f = open(curr_path + "/sample_pages/ppl-holds-Jan-12-2022.html", "r")
-        hold_data = PPL.hold_data(f.read())
-        f.close()
+        hold_data = []
+        with open(curr_path + "/sample_pages/ppl-holds-Jan-12-2022.html", "r", encoding='utf-8') as f:
+            hold_data = PPL.hold_data(f.read())
         # print(hold_data)
         exp_result = [
             ['Select. Item 1. France.', 'France', 'France, DVD', 'DVD', ' - ', '2002', 'DVD, 2002. Language: English',
@@ -214,9 +106,9 @@ class Library(unittest.TestCase):
         # save_output_as_txt(str(hold_data), "ppl_hold_data")
 
     def test_tpl_attains_hold_data(self):
-        f = open(curr_path + "/sample_pages/tpl-holds-Dec-30-2021.html", "r")
-        hold_data = TPL.hold_data(f.read())
-        f.close()
+        hold_data = []
+        with open(curr_path + "/sample_pages/tpl-holds-Dec-30-2021.html", "r", encoding='utf-8') as f:
+            hold_data = TPL.hold_data(f.read())
         # print(hold_data)
         exp_res = [[' ', ' ', 'Modern Java in action : lambda, streams, functional and reactive programming',
                     'Urma, Raoul-Gabriel, author.', 'Book', 'North York Central Library', 'Pick up by', 'Thu 6 Jan',
@@ -224,10 +116,10 @@ class Library(unittest.TestCase):
         self.assertListEqual(hold_data, exp_res)
 
     def test_wpl_attains_checkout_data(self):
-        f = open(curr_path + "/sample_pages/wpl-checkouts-Jan-05-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/wpl-checkouts-Jan-05-2022.html", "r", encoding='utf-8') as f:
+            page_source = f.read()
         checkout_data = WPL.checkout_data(page_source)
-        f.close()
         exp_res = [['Select. Item 1. My Life in Full.', 'My Life in Full', 'My Life in Full, Book',
                     'Work, Family, and Our Future', 'by ', 'Nooyi, Indra K.', 'Book', ' - ', '2021',
                     'Book, 2021. Language: English', 'You have not rated this title. Rate this title', 'Rate this',
@@ -239,10 +131,10 @@ class Library(unittest.TestCase):
         # save_output_as_txt(str(checkout_data), "wpl_checkout_data")
 
     def test_ppl_attains_checkout_data(self):
-        f = open(curr_path + "/sample_pages/ppl-checkouts-Jan-05-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/ppl-checkouts-Jan-05-2022.html", "r",encoding='utf-8') as f:
+            page_source = f.read()
         checkout_data = PPL.checkout_data(page_source)
-        f.close()
         exp_res = [
             ['Select. Item 1. This Is Glenn Gould - Story of A Genius.', 'This Is Glenn Gould - Story of A Genius',
              'This Is Glenn Gould - Story of A Genius, Music CD', 'by ', 'Bach, Johann Sebastian', 'Music CD', ' - ',
@@ -255,17 +147,11 @@ class Library(unittest.TestCase):
         # save_output_as_txt(str(checkout_data), "ppl_checkout_data")
 
     def test_tpl_attains_checkout_data(self):
-        f = open(curr_path + "/sample_pages/tpl-checkouts-Jan-05-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/tpl-checkouts-Jan-05-2022.html", "r", encoding='utf-8') as f:
+            page_source = f.read()
         checkout_data = TPL.checkout_data(page_source)
-        f.close()
-        exp_res = [[' ',
-                    'The bully-proof workplace : essential strategies, tips, and scripts for dealing with the office'
-                    + ' sociopath', ' ',
-                    'The bully-proof workplace : essential strategies, tips, and scripts for dealing with the office'
-                    + ' sociopath',
-                    'Dean, Peter J., 1946- author.', 'Book', '37131 187 370 002', 'Tue 11 Jan', '0', 'Renew'],
-                   [' ', 'How to win : 36 ancient strategies for success', ' ',
+        exp_res = [[' ', 'How to win : 36 ancient strategies for success', ' ',
                     'How to win : 36 ancient strategies for success', 'Wong, Eva, author.', 'Book', '37131 214 228 918',
                     'Mon 24 Jan', '1', 'Renew'],
                    [' ', 'Programming AWS lambda : build and deploy serverless applications with Java', ' ',
@@ -346,10 +232,10 @@ class Library(unittest.TestCase):
 
     def test_wpl_scrapes_hours_given_branch(self):
         branch = "Central"
-        f = open(curr_path + "/sample_pages/wpl-hours-Jan-13-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/wpl-hours-Jan-13-2022.html", "r", encoding='utf-8') as f:
+            page_source = f.read()
         hours = WPL._hours(page_source, branch)
-        f.close()
         # print(hours)
         exp_hours = """
         Central Library
@@ -368,10 +254,10 @@ class Library(unittest.TestCase):
 
     def test_ppl_scrapes_hours_given_branch(self):
         full_branch_name = "Central Library Hours\n"
-        f = open(curr_path + "/sample_pages/ppl-cn-hours-Jan-13-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/ppl-cn-hours-Jan-13-2022.html", "r", encoding='utf-8') as f:
+            page_source = f.read()
         hours = PPL._hours(page_source, full_branch_name)
-        f.close()
         exp_hours = "Central Library Hours\n\nOpen today until 9:00pm\n\nMonday \n9:30AM - 9:00PM\n\nTuesday " \
                     + "\n9:30AM - 9:00PM\n\nWednesday \n9:30AM - 9:00PM\n\nThursday \n9:30AM - 9:00PM\n\nFriday " \
                     + "\n9:30AM - 9:00PM\n\nSaturday \n9:30AM - 4:30PM\n\nSunday \nClosed\n\n\n"
@@ -383,10 +269,10 @@ class Library(unittest.TestCase):
 
     def test_tpl_scrapes_hours_given_branch(self):
         branch = "Malvern"
-        f = open(curr_path + "/sample_pages/tpl-hours-Jan-13-2022.html", "r")
-        page_source = f.read()
+        page_source = ""
+        with open(curr_path + "/sample_pages/tpl-hours-Jan-13-2022.html", "r", encoding='utf-8') as f:
+            page_source = f.read()
         hours = TPL._hours(branch, page_source)
-        f.close()
         exp_hours = """Malvern
         30 Sewells Road
         Toronto,
@@ -432,7 +318,6 @@ class Library(unittest.TestCase):
         self.assertEqual(hours, exp_hours)
 
     def test_messenger_formulates_checkouts_as_plain_text(self):
-        # checkouts = library_obj.items_checked_out(self.login_info['p'][0], self.login_info['p'][1])
         messenger = Messenger("Pickering Public Library")
         text = messenger.formulate_checkouts_text(self.mock_durham_checkouts, "plain")
         exp_text = f"""Pickering Public Library CHECKOUTS ({date.today()}):

@@ -1,5 +1,4 @@
 __pycache__
-__init__.py
 *.pyc
 env/
 .env
@@ -16,3 +15,6 @@ txt_logs/
 TODO.md
 *.db
 db.sqlite3
+vagrant/
+.vagrant/
+Vagrantfile
