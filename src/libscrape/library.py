@@ -13,18 +13,13 @@ from __future__ import print_function
 
 from bs4 import BeautifulSoup
 
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
-
 from lib_parser import *
 from parse_rule import *
 
 from parser_utils import *
 from datetime import date
 from lib_assets import *
-
+from urllib import request
 
 class DurhamLibrary:
     def __init__(self):
@@ -138,12 +133,12 @@ class DurhamLibrary:
 class PPL(DurhamLibrary):
     """Class for Pickering Public Library
     Attributes:
-        - driver: an instance of a Selenium Chrome web driver
+        - N/A
     """
 
-    def __init__(self, driver=None):
+    def __init__(self):
         super().__init__()
-        self.driver = driver
+        # EC.title_is("On Hold | Pickering Public Library | BiblioCommons")
         self.name = "Pickering Public Library"
 
     @staticmethod
@@ -153,10 +148,6 @@ class PPL(DurhamLibrary):
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         str[][]
@@ -186,7 +177,6 @@ class PPL(DurhamLibrary):
         str[][]
         """
         res = []
-        # save_output_as_html(self.driver.page_source, "ppl-checkouts")
         soup = BeautifulSoup(page_source, "html.parser")
         checkouts = soup.select("div.cp-batch-actions-list-item")
 
@@ -198,50 +188,32 @@ class PPL(DurhamLibrary):
             res.append(lines)
         return res
 
-    def items_on_hold(self, username, password):
+    def items_on_hold(self):
         """
-        Scrapes and returns the items on hold for the user with the login credentials given
+        Scrapes and returns the items on hold for the user
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        # record datetime this data was scraped
-        # scrape for items on hold only
-        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fv2%2Fholds")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.title_is("On Hold | Pickering Public Library | BiblioCommons")
-        )
-        hold_data = self.hold_data(self.driver.page_source)
+        page_source = request.urlopen('https://pickering.bibliocommons.com/v2/holds').read()
+        hold_data = self.hold_data(page_source)
         return self.parse_hold_data(hold_data)
 
-    def items_checked_out(self, username, password):
+    def items_checked_out(self):
         """
-        Scrapes and returns the items checked out for the user with the login credentials given
+        Scrapes and returns the items checked out for the user
         
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        self.login(username, password, url="https://pickering.bibliocommons.com/user/login?destination=%2Fcheckedout")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.title_is("Checked Out | Pickering Public Library | BiblioCommons")
-        )
-        checkout_data = self.checkout_data(self.driver.page_source)
+        page_source = request.urlopen('https://pickering.bibliocommons.com/v2/checkedout').read()
+        checkout_data = self.checkout_data(page_source)
         return self.parse_checkout_data(checkout_data)
 
     @staticmethod
@@ -282,64 +254,29 @@ class PPL(DurhamLibrary):
         str
         """
         full_branch_name = ""
+        page_source = ""
         if "Central" in branch:
-            self.driver.get("https://pickeringlibrary.ca/locations/PC/")
+            page_source = request.urlopen('https://pickeringlibrary.ca/locations/3/').read()
             full_branch_name = 'Central Library Hours\n'
         elif "George Ashe" in branch:
-            self.driver.get("https://pickeringlibrary.ca/locations/PC/")
+            page_source = request.urlopen('https://pickeringlibrary.ca/locations/4/').read()
             full_branch_name = 'George Ashe Library Hours\n'
 
         elif "Claremont" in branch:
-            self.driver.get("https://pickeringlibrary.ca/locations/CL/")
+            page_source = request.urlopen('https://pickeringlibrary.ca/locations/5/').read()
             full_branch_name = 'Claremont Library Hours\n'
         else:
-            raise NoSuchElementException(f"Hours for {branch} cannot be found because the branch does not exist")
-        if not (page_source):
-            page_source = self.driver.page_source
+            raise Exception(f"Hours for {branch} cannot be found because the branch does not exist")
         return PPL._hours(page_source, full_branch_name)
-
-    def login(self, username, password,
-              url="https://pickering.bibliocommons.com/user/login?destination=https%3A%2F%2Fpickeringlibrary.ca"):
-        """
-        Applies login credentials to the url given
-
-        Parameters
-        ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
-        url: str
-            The url which the login credentials will be applied to
-        """
-        self.driver.get(url)
-        try:
-            user_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=field_username]"))
-            )
-            pass_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=field_userpin]"))
-            )
-            submit_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=button_login]"))
-            )
-            user_login.send_keys(username)
-            pass_login.send_keys(password)
-            submit_login.click()
-        except TimeoutException as e:
-            if not ('Pickering Public Library' in self.driver.title):
-                raise (e)
-
 
 class WPL(DurhamLibrary):
     """Class for Whitby Public Library
     Attributes:
-        - driver: an instance of a Selenium Chrome web driver
+        - N/A
     """
     
-    def __init__(self, driver=None):
+    def __init__(self):
         super().__init__()
-        self.driver = driver
         self.name = "Whitby Public Library"
 
     @staticmethod
@@ -349,10 +286,6 @@ class WPL(DurhamLibrary):
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         str[][]
@@ -360,10 +293,6 @@ class WPL(DurhamLibrary):
         res = []
         soup = BeautifulSoup(page_source, "html.parser")
         checkouts = soup.find_all("div", class_="cp-batch-actions-list-item")
-        # locate the checkouts
-        # check_out_container = self.driver.find_element(By.CLASS_NAME, 'cp-item-list')
-        # checkouts = check_out_container.find_elements(By.CLASS_NAME, )
-
         for item in checkouts:
             plain_text = item.get_text('\n')
             # print(plain_text)
@@ -380,17 +309,11 @@ class WPL(DurhamLibrary):
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         str[][]
         """
         res = []
-        # locate the checkouts
-        # save_output_as_html(self.driver.page_source, "wpl-hold-data-library-py")
         soup = BeautifulSoup(page_source, "html.parser")
         holds = soup.find_all("div", class_='cp-batch-actions-list-item')
 
@@ -403,47 +326,32 @@ class WPL(DurhamLibrary):
         # print(res)
         return res
 
-    def items_on_hold(self, username, password):
+    def items_on_hold(self):
         """
-        Scrapes and returns the items on hold for the user with the login credentials given
+        Scrapes and returns the items on hold for the user
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        self.login(username, password, url="https://whitby.bibliocommons.com/v2/holds")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, 'cp-item-list')))
-        # scrape for items on hold only
-        hold_data = self.hold_data(self.driver.page_source)
+        page_source = request.urlopen('https://whitby.bibliocommons.com/v2/holds').read()
+        hold_data = self.hold_data(page_source)
         return self.parse_hold_data(hold_data)
 
-    def items_checked_out(self, username, password):
+    def items_checked_out(self):
         """
-        Scrapes and returns the items on checked for the user with the login credentials given
+        Scrapes and returns the items on checked for the user
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        self.login(username, password, url="https://whitby.bibliocommons.com/v2/checkedout")
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "cp-item-list")))
-        checkout_data = self.checkout_data(self.driver.page_source)
+        page_source = request.urlopen('https://whitby.bibliocommons.com/v2/checkedout').read()
+        checkout_data = self.checkout_data(page_source)
         return self.parse_checkout_data(checkout_data)
 
     @staticmethod
@@ -491,53 +399,16 @@ class WPL(DurhamLibrary):
         -------
         str
         """
-
-        self.driver.get("https://www.whitbylibrary.ca/hours")
-        return WPL._hours(self.driver.page_source, branch)
-
-    def login(self, username, password,
-              url='https://whitby.bibliocommons.com/user/login?destination=%2Fuser_dashboard'):
-        """
-        Applies login credentials to the url given
-
-        Parameters
-        ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
-        url: str
-            The url which the login credentials will be applied to
-        """
-        self.driver.get(url)
-        # if this instance of the library is connected to a particular user, log them in
-        try:
-            user_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=field_username]"))
-            )
-            pass_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=field_userpin]"))
-            )
-            submit_login = WebDriverWait(driver=self.driver, timeout=10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "input[testid=button_login]"))
-            )
-            if user_login and pass_login and submit_login:
-                user_login.send_keys(username)
-                pass_login.send_keys(password)
-                submit_login.click()
-        except (TimeoutException, NoSuchElementException) as e:
-            if not ('Whitby Public Library' in self.driver.title):
-                raise e
-
+        page_source = request.urlopen('https://www.whitbylibrary.ca/hours').read()
+        return WPL._hours(page_source, branch)
 
 class TPL:
     """Class for Toronto Public Library
     Attributes:
-        - driver: an instance of a Selenium Chrome web driver
+        - N/A
     """
 
-    def __init__(self, driver=None):
-        self.driver = driver
+    def __init__(self):
         self.name = "Toronto Public Library"
 
     @staticmethod
@@ -579,10 +450,6 @@ class TPL:
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         str[][]
@@ -590,17 +457,10 @@ class TPL:
         res = []
         soup = BeautifulSoup(page_source, "html.parser")
         on_hold = soup.select("#PageContent > div.holds-redux.ready-for-pickup > div > div > table > tbody")
-        # on_hold = self.driver.find_elements(By.CSS_SELECTOR, "#PageContent > div.holds-redux.ready-for-pickup
-        # > div > div > table > tbody")
-        # save_output_as_html(self.driver.page_source, "tpl-holds-raw")
         for item in on_hold:
             plain_text = item.get_text('\n')
-            # print(plain_text)
             lines = plain_text.split('\n')
-            # print(lines)
             res.append(lines)
-
-        # save_output_as_txt(str(res), "tpl-hold-data-raw")
         return res
 
     @staticmethod
@@ -610,10 +470,6 @@ class TPL:
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         str[][]
@@ -630,30 +486,18 @@ class TPL:
         # save_output_as_txt(str(res), 'tpl-checkouts-raw')
         return res
 
-    def items_on_hold(self, username, password):
+    def items_on_hold(self):
         """
-        Scrapes and returns the items on hold for the user with the login credentials given
+        Scrapes and returns the items on hold for the user
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        res = []
-   
-        holds_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fholds"
-        self.login(username, password, url=holds_url, expected_title='Holds : Toronto Public Library')
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_any_elements_located(
-                (By.CSS_SELECTOR, "#PageContent > div.holds-redux.ready-for-pickup"))
-        )
-        hold_data = TPL.hold_data(self.driver.page_source)
+        # By.CSS_SELECTOR, "#PageContent > div.holds-redux.ready-for-pickup"))
+        hold_data = TPL.hold_data()
         #print(hold_data)
         res = []
         if hold_data:
@@ -662,30 +506,20 @@ class TPL:
                 res.append(hold_item)
         return res
 
-    def items_checked_out(self, username, password):
+    def items_checked_out(self):
         """
-        Scrapes and returns the items on checked for the user with the login credentials given
+        Scrapes and returns the items on checked for the user
 
         Parameters
         ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
         Returns
         -------
         Item[]
         """
-        res = []
-        checkout_url = "https://account.torontopubliclibrary.ca/signin?redirect=%2Fcheckouts"
-        self.login(username, password, url=checkout_url, expected_title='Checkouts : Toronto Public Library')
-
-        WebDriverWait(driver=self.driver, timeout=10).until(
-            EC.visibility_of_all_elements_located((By.CLASS_NAME, "item-wrapper"))
-        )
-
-        checkout_data = self.checkout_data(self.driver.page_source)
+        # By.CLASS_NAME, "item-wrapper"))
+        checkout_data = self.checkout_data()
         # print(checkout_data)
+        res = []
         for lines in checkout_data:
             checkout_item = self.parse_checkout_data(lines)
             # print(checkout_item)
@@ -719,11 +553,11 @@ class TPL:
                     lines = [x.lstrip() for x in lines]
                     # print(lines)
                     return '\n'.join(lines)
-            except NoSuchElementException as e:
+            except Exception as e:
                 end_of_branches = True
 
         if end_of_branches:
-            raise NoSuchElementException(f"Hours for {branch} cannot be found because the branch does not exist")
+            raise Exception(f"Hours for {branch} cannot be found because the branch does not exist")
         return ""
 
     def hours(self, branch):
@@ -738,33 +572,5 @@ class TPL:
         -------
         str
         """
-
-        self.driver.get("https://www.torontopubliclibrary.ca/branches/")
-        page_source = self.driver.page_source
-        return self._hours(branch, page_source)
-
-    def login(self, username, password, url='https://account.torontopubliclibrary.ca/login', expected_title=None):
-        """
-        Applies login credentials to the url given
-
-        Parameters
-        ----------
-        username: str
-            The username of the account that will be signed into
-        password: str
-            The password of the account that will be signed into
-        url: str
-            The url which the login credentials will be applied to
-        """
-        
-
-        self.driver.get(url)
-        if expected_title:
-            if expected_title == self.driver.title:
-                return
-        user_login = self.driver.find_element_by_id("userID")
-        pass_login = self.driver.find_element_by_id("password")
-        submit_login = self.driver.find_element_by_css_selector("#form_signin > div > button")
-        user_login.send_keys(username)
-        pass_login.send_keys(password)
-        submit_login.click()
+        page_source = request.urlopen('https://www.torontopubliclibrary.ca/branches/').read()
+        return TPL._hours(page_source, branch)

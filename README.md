@@ -5,18 +5,27 @@
 * Send SMS library status updates in plain text or a Google Doc
 * Save results of a TPL query in a database for future reference
 
+# Run tests
+
+```
+python -m venv env
+source env/bin/activate
+python -m pip install -r requirements.txt
+cd src/libscrape
+python -m unittest tests.py
+```
+
 ## Installation
 
 ### Option 1: Docker
 ```bash
-docker build --tag libscrape .
+docker build --tag libscrape:latest .
 ```
 
 ### Option 2: On disk (Unix/Linux)
-1. Install [Chrome WebDriver](https://chromedriver.chromium.org/downloads)
-2. Install [Python](https://www.python.org/downloads/)
-3. [Create a virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
-4. Install dependencies from requirements.txt
+1. Install [Python](https://www.python.org/downloads/)
+2. [Create a virtual environment](https://docs.python.org/3/tutorial/venv.html#creating-virtual-environments)
+3. Install dependencies from requirements.txt
 
 ## Usage
 1. Configure an appropriate .env file in src/libscrape
